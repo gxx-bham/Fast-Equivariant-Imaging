@@ -1,0 +1,61 @@
+# IDE and notebook artifacts
+.idea/
+.vscode/
+**/.ipynb_checkpoints/
+
+# Python caches and environments
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+
+# Local secrets
+.env
+.env.*
+*.key
+*.pem
+
+# Datasets (not distributed with this snapshot)
+CT/
+Urban100/
+data/
+datasets/
+
+# Experiment outputs and logs
+outputs/
+outputs_*/
+results/
+runs/
+logs/
+run_logs/
+wandb/
+checkpoints/
+ct_ckp/
+inpainting_ckp/
+ct-Results/
+inpainting-Results/
+metrics-FEI-vanilla/
+
+# Model and array artifacts
+weights/
+*.pt
+*.pth
+*.pth.tar
+*.ckpt
+*.onnx
+*.h5
+*.hdf5
+*.mat
+*.npy
+*.npz
+*.nii
+*.nii.gz
+*.dcm
+
+# Manuscript drafts and system files
+doc/
+*.pdf
+.DS_Store
+Thumbs.db
+

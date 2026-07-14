@@ -1,0 +1,5 @@
+python test_FEI_Inpainting.py --config configs/experiments/urban100_ei.yaml --checkpoint outputs/urban100/ei/seed0/checkpoints/final_model.pth.tar --device cuda:0 --output-dir outputs/urban100/ei/seed0/evaluation
+python test_FEI_Inpainting.py --config configs/experiments/urban100_fei_o1.yaml --checkpoint outputs/urban100/fei_o1/seed0/checkpoints/final_model.pth.tar --device cuda:0 --output-dir outputs/urban100/fei_o1/seed0/evaluation
+python test_FEI_Inpainting.py --config configs/experiments/urban100_fei_o2.yaml --checkpoint outputs/urban100/fei_o2/seed0/checkpoints/final_model.pth.tar --device cuda:0 --output-dir outputs/urban100/fei_o2/seed0/evaluation
+python test_FEI_Inpainting.py --config configs/experiments/urban100_pnp_fei_o1.yaml --checkpoint outputs/urban100/pnp_fei_o1/seed0/checkpoints/final_model.pth.tar --device cuda:0 --output-dir outputs/urban100/pnp_fei_o1/seed0/evaluation
+python test_FEI_Inpainting.py --config configs/experiments/urban100_pnp_fei_o2.yaml --checkpoint outputs/urban100/pnp_fei_o2/seed0/checkpoints/final_model.pth.tar --device cuda:0 --output-dir outputs/urban100/pnp_fei_o2/seed0/evaluation

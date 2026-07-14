@@ -1,0 +1,10 @@
+torch==2.5.1
+torchvision==0.20.1
+numpy==1.26.4
+scipy==1.13.1
+matplotlib==3.9.2
+scikit-image==0.24.0
+kornia==0.8.1
+deepinv==0.3.5
+PyYAML==6.0.1
+

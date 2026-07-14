@@ -1,0 +1,29 @@
+cff-version: 1.2.0
+message: "If you use this code, please cite the FEI paper below."
+title: "Fast Equivariant Imaging"
+type: software
+authors:
+  - family-names: Xu
+    given-names: Guixian
+  - family-names: Li
+    given-names: Jinglai
+  - family-names: Tang
+    given-names: Junqi
+version: submission-v1
+date-released: 2026-07-14
+repository-code: "https://github.com/gxx-bham/Fast-Equivariant-Imaging"
+url: "https://arxiv.org/abs/2507.06764v5"
+license: GPL-3.0-only
+preferred-citation:
+  type: article
+  title: "Fast Equivariant Imaging: Accelerating Unsupervised Learning and Model Adaptation via Inexact Splitting"
+  authors:
+    - family-names: Xu
+      given-names: Guixian
+    - family-names: Li
+      given-names: Jinglai
+    - family-names: Tang
+      given-names: Junqi
+  year: 2025
+  doi: "10.48550/arXiv.2507.06764"
+  url: "https://arxiv.org/abs/2507.06764v5"

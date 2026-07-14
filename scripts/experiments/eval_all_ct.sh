@@ -1,0 +1,5 @@
+python test_FEI_CT.py --config configs/experiments/ct_ei.yaml --checkpoint outputs/ct/ei/seed0/checkpoints/final_model.pth.tar --device cuda:0 --output-dir outputs/ct/ei/seed0/evaluation
+python test_FEI_CT.py --config configs/experiments/ct_fei_o1.yaml --checkpoint outputs/ct/fei_o1/seed0/checkpoints/final_model.pth.tar --device cuda:0 --output-dir outputs/ct/fei_o1/seed0/evaluation
+python test_FEI_CT.py --config configs/experiments/ct_fei_o2.yaml --checkpoint outputs/ct/fei_o2/seed0/checkpoints/final_model.pth.tar --device cuda:0 --output-dir outputs/ct/fei_o2/seed0/evaluation
+python test_FEI_CT.py --config configs/experiments/ct_pnp_fei_o1.yaml --checkpoint outputs/ct/pnp_fei_o1/seed0/checkpoints/final_model.pth.tar --device cuda:0 --output-dir outputs/ct/pnp_fei_o1/seed0/evaluation
+python test_FEI_CT.py --config configs/experiments/ct_pnp_fei_o2.yaml --checkpoint outputs/ct/pnp_fei_o2/seed0/checkpoints/final_model.pth.tar --device cuda:0 --output-dir outputs/ct/pnp_fei_o2/seed0/evaluation

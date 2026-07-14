@@ -1,0 +1,69 @@
+config_name: urban100_fei_o2
+task: urban100
+method: FEI-O2
+seed: 0
+device: cuda:0
+dataset:
+  name: Urban100
+  path: Urban100/all/all
+  split_policy: first90_last10
+  train_samples: 90
+  val_samples: 0
+  test_samples: 10
+  crop_size:
+    - 512
+    - 512
+  target_size: 256
+physics:
+  operator: inpainting
+  mask_rate: 0.6
+transform:
+  name: shift
+  n_trans: 3
+  max_offset: 0
+model:
+  name: UNet
+  in_channels: 3
+  out_channels: 3
+  compact: 4
+  residual: true
+  circular_padding: true
+  cat: true
+train:
+  epochs: 2000
+  batch_size: 4
+  optimizer: Adam
+  lr_G: 0.001
+  weight_decay: 1.0e-08
+  schedule:
+    - 500
+    - 1000
+    - 1500
+  loss_type: l2
+  ckp_interval: 1000
+  validation_interval: 0
+  snapshot_epochs:
+    - 100
+    - 300
+    - 500
+    - 1000
+    - 1500
+    - 2000
+method_settings:
+  alpha: 1
+  lambda: 0.1
+  beta: 0.9
+  eta: 0.09
+  J: 10
+selection:
+  checkpoint_selection_metric: final_epoch
+  evaluation_checkpoint: final_model.pth.tar
+  early_stopping_metric: none
+output:
+  root_dir: outputs
+  save_resolved_config: true
+  save_environment_info: true
+  save_git_info: true
+  save_run_metadata: true
+  track_training_wall_clock: true
+  save_eval_runtime_summary: false
