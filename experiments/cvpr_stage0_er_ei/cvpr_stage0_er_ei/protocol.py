@@ -1,7 +1,8 @@
-"""Sequential T1 (4x) -> T2 (8x) protocol for Fine-tune | ER+MC | ER+EI."""
+"""Sequential T1 -> T2 protocol for Fine-tune | ER+MC | ER+EI."""
 
 from __future__ import annotations
 
+import time
 from pathlib import Path
 from typing import Any
 
@@ -9,8 +10,8 @@ import deepinv as dinv
 import torch
 
 from .buffer import MeasurementBuffer
-from .config import ARM_LABELS, SmokeConfig
-from .data_physics import build_tasks, load_knee_slices, task_operator_report
+from .config import ARM_LABELS, MASK_FAMILY_TO_CLASS, SmokeConfig
+from .data_physics import build_tasks, load_anatomy_slices, task_operator_report
 from .logging_utils import summary_row
 from .losses import current_task_losses, losses_for_arm
 from .train_eval import eval_psnr, make_modl, set_seed, train_task
@@ -27,19 +28,38 @@ def run_arm(arm: str, cfg: SmokeConfig, out_dir: Path | None = None) -> dict[str
         raise ValueError(f"unknown arm {arm!r}")
     device = _device(cfg)
     set_seed(cfg.seed)
+    t_wall0 = time.time()
     n_eval = int(cfg.n_eval)
     n_total = int(cfg.n_train) + (n_eval if n_eval > 0 else 0)
     n_total = max(n_total, int(cfg.n_train))
-    x = load_knee_slices(
-        img_size=cfg.img_size, download=cfg.download, n_total=n_total
+    x_t1 = load_anatomy_slices(
+        anatomy=cfg.t1_anatomy,
+        img_size=cfg.img_size,
+        download=cfg.download,
+        n_total=n_total,
     )
+    x_t2 = None
+    if str(cfg.t2_anatomy).lower() != str(cfg.t1_anatomy).lower():
+        x_t2 = load_anatomy_slices(
+            anatomy=cfg.t2_anatomy,
+            img_size=cfg.img_size,
+            download=cfg.download,
+            n_total=n_total,
+        )
     tasks = build_tasks(
-        x,
+        x_t1,
         seed=cfg.seed,
         device=device,
         img_size=cfg.img_size,
         n_train=cfg.n_train,
         n_eval=n_eval,
+        t1_accel=cfg.t1_accel,
+        t2_accel=cfg.t2_accel,
+        t1_mask_family=cfg.t1_mask_family,
+        t2_mask_family=cfg.t2_mask_family,
+        t1_anatomy=cfg.t1_anatomy,
+        t2_anatomy=cfg.t2_anatomy,
+        x_t2=x_t2,
     )
     model = make_modl(device)
     save_path = None if out_dir is None else str(out_dir / "ckpts" / arm)
@@ -94,6 +114,7 @@ def run_arm(arm: str, cfg: SmokeConfig, out_dir: Path | None = None) -> dict[str
         psnr_t2_after_t2=psnr_t2_after_t2,
         psnr_t1_after_t1=psnr_t1_after_t1,
     )
+    wall_time_sec = float(time.time() - t_wall0)
     return {
         "row": row,
         "after_T1": {
@@ -115,10 +136,30 @@ def run_arm(arm: str, cfg: SmokeConfig, out_dir: Path | None = None) -> dict[str
         },
         "n_train": len(tasks["T1"].train),
         "n_eval": len(tasks["T1"].eval),
+        "n_train_t2": len(tasks["T2"].train),
+        "n_eval_t2": len(tasks["T2"].eval),
         "held_out_eval": n_eval > 0,
         "epochs_t1": cfg.t1_epochs(),
         "epochs_t2": cfg.t2_epochs(),
         "tiny": cfg.tiny,
         "arm": arm,
         "device": str(device),
+        "wall_time_sec": wall_time_sec,
+        "schedule": {
+            "t1_anatomy": tasks["T1"].anatomy,
+            "t2_anatomy": tasks["T2"].anatomy,
+            "t1_accel": tasks["T1"].accel,
+            "t2_accel": tasks["T2"].accel,
+            "t1_mask_family": tasks["T1"].mask_family,
+            "t2_mask_family": tasks["T2"].mask_family,
+            "mask_generator_t1": tasks["T1"].mask_generator,
+            "mask_generator_t2": tasks["T2"].mask_generator,
+            "epochs_t1": cfg.t1_epochs(),
+            "epochs_t2": cfg.t2_epochs(),
+            "n_train": len(tasks["T1"].train),
+            "n_eval": len(tasks["T1"].eval),
+        },
+        "gate": cfg.gate,
+        "domain_incremental": str(tasks["T1"].anatomy) != str(tasks["T2"].anatomy),
+        "mask_family_to_class": dict(MASK_FAMILY_TO_CLASS),
     }

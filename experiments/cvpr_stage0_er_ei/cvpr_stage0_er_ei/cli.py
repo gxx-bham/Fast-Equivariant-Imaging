@@ -10,9 +10,15 @@ from pathlib import Path
 
 import deepinv as dinv
 
-from .config import ARMS, N_BUF_GRID, PINNED_DEEPINV, SmokeConfig
+from .config import ARMS, MASK_FAMILY_TO_CLASS, N_BUF_GRID, PINNED_DEEPINV, SmokeConfig
 from .data_physics import smoke_data_physics
-from .logging_utils import go_kill_readout, write_csv, write_json
+from .logging_utils import (
+    distinct_slot_proof,
+    finetune_forgetting_gate,
+    go_kill_readout,
+    write_csv,
+    write_json,
+)
 from .protocol import run_arm
 
 
@@ -63,6 +69,37 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         type=int,
         default=0,
         help="Held-out eval slices. 0 = eval on train slices.",
+    )
+    parser.add_argument("--t1-accel", type=int, default=4)
+    parser.add_argument("--t2-accel", type=int, default=8)
+    parser.add_argument(
+        "--t1-mask-family",
+        choices=("gaussian", "random"),
+        default="gaussian",
+        help="T1 Cartesian mask family (GaussianMaskGenerator or RandomMaskGenerator).",
+    )
+    parser.add_argument(
+        "--t2-mask-family",
+        choices=("gaussian", "random"),
+        default="gaussian",
+        help="T2 Cartesian mask family. Gate B uses random (RandomMaskGenerator).",
+    )
+    parser.add_argument(
+        "--t1-anatomy",
+        choices=("knee", "brain"),
+        default="knee",
+    )
+    parser.add_argument(
+        "--t2-anatomy",
+        choices=("knee", "brain"),
+        default="knee",
+        help="Gate A uses brain (domain-incremental mini RSS).",
+    )
+    parser.add_argument(
+        "--gate",
+        choices=("B", "A"),
+        default=None,
+        help="Fine-tune forgetting gate label: B=same-knee mask-family; A=knee→brain.",
     )
     parser.add_argument("--out", type=str, default="")
     parser.add_argument("--no-download", action="store_true")
@@ -118,6 +155,13 @@ def _cfg_from_args(args: argparse.Namespace, n_buf: int | None = None) -> SmokeC
         batch_size=args.batch_size,
         n_train=args.n_train,
         n_eval=args.n_eval,
+        t1_accel=args.t1_accel,
+        t2_accel=args.t2_accel,
+        t1_mask_family=args.t1_mask_family,
+        t2_mask_family=args.t2_mask_family,
+        t1_anatomy=args.t1_anatomy,
+        t2_anatomy=args.t2_anatomy,
+        gate=args.gate or "",
         download=not args.no_download,
         out_dir=out,
     )
@@ -135,12 +179,27 @@ def _payload_config(cfg: SmokeConfig, arms: tuple[str, ...]) -> dict:
         "max_batch_steps": cfg.max_batch_steps,
         "n_train": cfg.n_train,
         "n_eval": cfg.n_eval,
+        "t1_accel": cfg.t1_accel,
+        "t2_accel": cfg.t2_accel,
+        "t1_mask_family": cfg.t1_mask_family,
+        "t2_mask_family": cfg.t2_mask_family,
+        "mask_generator_t1": MASK_FAMILY_TO_CLASS[cfg.t1_mask_family],
+        "mask_generator_t2": MASK_FAMILY_TO_CLASS[cfg.t2_mask_family],
+        "t1_anatomy": cfg.t1_anatomy,
+        "t2_anatomy": cfg.t2_anatomy,
+        "gate": cfg.gate,
+        "domain_incremental": str(cfg.t1_anatomy) != str(cfg.t2_anatomy),
         "device": cfg.device,
         "deepinv_version": getattr(dinv, "__version__", "unknown"),
         "deepinv_pinned": PINNED_DEEPINV,
         "backbone": "deepinv.models.MoDL",
         "losses_current": "MCLoss() + EILoss(Rotate(n_trans=4))",
-        "physics": "deepinv.physics.MRI + GaussianMaskGenerator (4x then 8x, per-sample A)",
+        "physics": (
+            f"deepinv.physics.MRI + {MASK_FAMILY_TO_CLASS[cfg.t1_mask_family]} "
+            f"({cfg.t1_anatomy} {cfg.t1_accel}x) then "
+            f"{MASK_FAMILY_TO_CLASS[cfg.t2_mask_family]} "
+            f"({cfg.t2_anatomy} {cfg.t2_accel}x), per-sample A"
+        ),
     }
 
 
@@ -149,10 +208,13 @@ def _run_arms(cfg: SmokeConfig, arms: tuple[str, ...]) -> list[dict]:
     out_dir.mkdir(parents=True, exist_ok=True)
     rows = []
     details = []
+    t0 = time.time()
     for arm in arms:
         print(
             f"\n=== arm={arm} N_buf={cfg.n_buf} seed={cfg.seed} "
-            f"device={cfg.device} tiny={cfg.tiny} n_train={cfg.n_train} ==="
+            f"device={cfg.device} tiny={cfg.tiny} n_train={cfg.n_train} "
+            f"gate={cfg.gate or '-'} T1={cfg.t1_anatomy}/{cfg.t1_mask_family}/{cfg.t1_accel}x "
+            f"T2={cfg.t2_anatomy}/{cfg.t2_mask_family}/{cfg.t2_accel}x ==="
         )
         result = run_arm(arm, cfg, out_dir=out_dir)
         if int(result["N_buf"]) != int(cfg.n_buf):
@@ -179,24 +241,35 @@ def _run_arms(cfg: SmokeConfig, arms: tuple[str, ...]) -> list[dict]:
                 indent=2,
             ),
         )
+    elapsed_sec = time.time() - t0
     csv_path = out_dir / f"metrics_nbuf{cfg.n_buf}_seed{cfg.seed}.csv"
     json_path = out_dir / f"metrics_nbuf{cfg.n_buf}_seed{cfg.seed}.json"
     write_csv(csv_path, rows)
+    proofs = [distinct_slot_proof(d["buffer"]) for d in details]
     payload = {
         "config": _payload_config(cfg, arms),
         "rows": rows,
         "details": details,
         "go_kill": go_kill_readout(rows, tiny=cfg.tiny),
+        "elapsed_sec": elapsed_sec,
+        "device": details[0]["device"] if details else cfg.device,
+        "distinct_slot_proof": proofs[0] if len(proofs) == 1 else proofs,
         "fgt_definition": (
             "Fgt = PSNR_T1_after_T1 - PSNR_T1_after_T2; "
             "Avg = 0.5 * (PSNR_T1_after_T2 + PSNR_T2_after_T2). "
             "CSV PSNR_T1/PSNR_T2 are after T2."
         ),
     }
+    if cfg.gate:
+        payload["forgetting_gate"] = finetune_forgetting_gate(rows)
+        payload["schedule"] = details[0].get("schedule") if details else None
     write_json(json_path, payload)
     print(f"\nWrote {csv_path}")
     print(f"Wrote {json_path}")
     print("go/kill:", json.dumps(payload["go_kill"], indent=2))
+    if cfg.gate:
+        print("forgetting_gate:", json.dumps(payload["forgetting_gate"], indent=2))
+    print(f"device={payload['device']} elapsed_sec={elapsed_sec:.1f}")
     return rows
 
 

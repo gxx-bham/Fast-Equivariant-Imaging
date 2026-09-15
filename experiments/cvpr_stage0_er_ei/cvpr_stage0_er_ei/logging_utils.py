@@ -7,7 +7,7 @@ import json
 from pathlib import Path
 from typing import Any, Iterable, Mapping, Sequence
 
-from .config import ARM_LABELS, CSV_COLUMNS
+from .config import ARM_LABELS, CSV_COLUMNS, CLEAR_POSITIVE_FGT
 
 
 def fgt(psnr_t1_after_t1: float, psnr_t1_after_t2: float) -> float:
@@ -166,3 +166,61 @@ def go_kill_readout(
             + result["reason"]
         )
     return result
+
+
+def distinct_slot_proof(buffer_report: Mapping[str, Any]) -> dict[str, Any]:
+    """Compact proof that the buffer stored distinct past (y, A) slots."""
+    slots = []
+    for rec in buffer_report.get("slots", []):
+        slots.append(
+            {
+                "slot": rec.get("slot"),
+                "y_id": rec.get("y_id"),
+                "mask_id": rec.get("mask_id"),
+                "accel": rec.get("accel"),
+                "task": rec.get("task"),
+            }
+        )
+    return {
+        "N_buf": buffer_report.get("N_buf"),
+        "n_distinct_ya": buffer_report.get("n_distinct_ya"),
+        "n_distinct_A": buffer_report.get("n_distinct_A"),
+        "n_distinct_y": buffer_report.get("n_distinct_y"),
+        "holds_t1_A": buffer_report.get("holds_t1_A"),
+        "full_distinct": buffer_report.get("full_distinct"),
+        "accels": buffer_report.get("accels"),
+        "slots": slots,
+    }
+
+
+def finetune_forgetting_gate(
+    rows: Sequence[Mapping[str, Any]],
+    *,
+    min_fgt: float = CLEAR_POSITIVE_FGT,
+) -> dict[str, Any]:
+    """PASS iff Fine-tune Fgt is clearly positive (T1 PSNR drop after T2)."""
+    fgt_val = None
+    for row in rows:
+        if str(row.get("arm")) in ("Fine-tune", "finetune"):
+            fgt_val = float(row["Fgt"])
+            break
+    if fgt_val is None and rows:
+        fgt_val = float(rows[0]["Fgt"])
+    if fgt_val is None:
+        return {
+            "verdict": "FAIL",
+            "Fgt": None,
+            "min_fgt": float(min_fgt),
+            "reason": "No Fine-tune Fgt row to score.",
+        }
+    passed = fgt_val > float(min_fgt)
+    return {
+        "verdict": "PASS" if passed else "FAIL",
+        "Fgt": fgt_val,
+        "min_fgt": float(min_fgt),
+        "clearly_positive": passed,
+        "reason": (
+            f"Fine-tune Fgt={fgt_val:.4f} {'>' if passed else '<='} {min_fgt} "
+            "(need a clear T1 PSNR drop after T2)."
+        ),
+    }

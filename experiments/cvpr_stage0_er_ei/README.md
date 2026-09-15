@@ -15,8 +15,8 @@ This package does not claim novelty and does not invent citations.
 | Backbone | `deepinv.models.MoDL` (`MoDL()`, library defaults) |
 | Current-task loss (all arms) | `MCLoss()` + `EILoss(Rotate(n_trans=4))` (deepinv MRI EI demo) |
 | Physics | `deepinv.physics.MRI` |
-| Mask family | `deepinv.physics.generator.GaussianMaskGenerator` |
-| Task stream | T1 accel **4×** → T2 accel **8×**, sequential train, eval **both** after each task |
+| Mask family | `GaussianMaskGenerator` (default T1/T2); gate B T2 uses `RandomMaskGenerator` |
+| Task stream | Default T1 accel **4×** → T2 accel **8×**, sequential train, eval **both** after each task |
 | Arms | Fine-tune \| ER+MC \| ER+EI |
 | Buffer | stores **(y, A) only** (measurement + MRI mask); uniform sampling; current:replay mix **1:1** |
 | ER+MC | MC only on buffer |
@@ -117,6 +117,17 @@ bash scripts/run_grid.sh
 ```
 
 Tiny mode uses `--epochs 1 --max-steps 2` so the CPU path finishes. `run_grid.sh` is the go/kill run: 150 epochs (deepinv MRI EI demo from-scratch order of magnitude) on the same 128×128 mini knee set. GPU is used when `torch.cuda.is_available()`, otherwise CPU, and the device is labeled in the log.
+
+Fine-tune forgetting gates (one schedule try each; **not** the three-arm grid):
+
+```bash
+# B: same-knee, T1 Gaussian 4× → T2 RandomMaskGenerator 8×
+bash scripts/run_gate_B.sh
+# If B Fgt is not clearly > 0, escalate to A (knee→brain):
+bash scripts/run_stage0b_gates.sh
+```
+
+Do not start `run_grid.sh` from a FAIL gate. Wait for the room after a PASS.
 
 ## Logs
 

@@ -17,9 +17,10 @@ from torchvision import transforms
 import deepinv as dinv
 from deepinv.datasets import SimpleFastMRISliceDataset
 from deepinv.models import MoDL
-from deepinv.physics.generator import GaussianMaskGenerator
+from deepinv.physics.generator import GaussianMaskGenerator, RandomMaskGenerator
 
 from .buffer import tensor_id
+from .config import MASK_FAMILY_TO_CLASS
 
 
 def _resolve_device(device: str | torch.device | None) -> torch.device:
@@ -55,25 +56,29 @@ def _corner_crops(x: torch.Tensor, size: int) -> torch.Tensor:
     return torch.cat(crops, dim=0)
 
 
-def load_knee_slices(
+def load_anatomy_slices(
+    anatomy: str = "knee",
     img_size: int = 128,
     download: bool = True,
     root: Path | None = None,
     n_total: int = 2,
 ) -> torch.Tensor:
-    """Load the deepinv mini single-coil FastMRI knee subset.
+    """Load the deepinv mini FastMRI subset for one anatomy (knee or brain RSS).
 
     n_total <= 2: resize both demo slices to img_size (tiny path).
     n_total > 2: 128×128 corner crops from native 320×320 (up to 8 slices)
     so N_buf=4 can store 4 distinct (y, A). Recon stays 128×128.
     """
+    anatomy = str(anatomy).lower()
+    if anatomy not in ("knee", "brain"):
+        raise ValueError(f"anatomy must be 'knee' or 'brain' (got {anatomy!r})")
     root = Path(root) if root is not None else _cache_dir()
     root.mkdir(parents=True, exist_ok=True)
     if n_total <= 2:
         transform = transforms.Compose([transforms.Resize(img_size)])
         dataset = SimpleFastMRISliceDataset(
             root,
-            anatomy="knee",
+            anatomy=anatomy,
             train=True,
             train_percent=1.0,
             transform=transform,
@@ -83,7 +88,7 @@ def load_knee_slices(
     else:
         dataset = SimpleFastMRISliceDataset(
             root,
-            anatomy="knee",
+            anatomy=anatomy,
             train=True,
             train_percent=1.0,
             transform=None,
@@ -96,9 +101,84 @@ def load_knee_slices(
         )
     if x.shape[0] < n_total:
         raise RuntimeError(
-            f"Requested n_total={n_total} slices but only loaded {x.shape[0]}"
+            f"Requested n_total={n_total} slices but only loaded {x.shape[0]} "
+            f"for anatomy={anatomy}"
         )
     return x
+
+
+def load_knee_slices(
+    img_size: int = 128,
+    download: bool = True,
+    root: Path | None = None,
+    n_total: int = 2,
+) -> torch.Tensor:
+    """Load the deepinv mini single-coil FastMRI knee subset."""
+    return load_anatomy_slices(
+        anatomy="knee",
+        img_size=img_size,
+        download=download,
+        root=root,
+        n_total=n_total,
+    )
+
+
+_MASK_GENERATORS = {
+    "gaussian": GaussianMaskGenerator,
+    "random": RandomMaskGenerator,
+}
+_FAMILY_SEED = {"gaussian": 0, "random": 4243}
+_ANATOMY_SEED = {"knee": 0, "brain": 777}
+_TASK_SEED = {"T1": 0, "T2": 9001}
+
+
+def mask_seed(
+    seed: int,
+    acceleration: int,
+    family: str,
+    *,
+    anatomy: str = "knee",
+    task: str = "T1",
+    eval_split: bool = False,
+) -> int:
+    """Deterministic mask RNG seed; family/task/anatomy must not collide."""
+    family = str(family).lower()
+    anatomy = str(anatomy).lower()
+    extra = 7919 if eval_split else 0
+    return (
+        int(seed)
+        + int(acceleration) * 1009
+        + int(_FAMILY_SEED.get(family, 0))
+        + int(_ANATOMY_SEED.get(anatomy, 0))
+        + int(_TASK_SEED.get(task, 0))
+        + extra
+    )
+
+
+def make_masks(
+    img_size: int,
+    acceleration: int,
+    seed: int,
+    device: torch.device,
+    batch_size: int,
+    family: str = "gaussian",
+) -> torch.Tensor:
+    """One Cartesian mask per sample. family=gaussian | random (RandomMaskGenerator)."""
+    family = str(family).lower()
+    cls = _MASK_GENERATORS.get(family)
+    if cls is None:
+        raise ValueError(
+            f"mask family must be one of {sorted(_MASK_GENERATORS)} (got {family!r})"
+        )
+    rng = torch.Generator(device="cpu").manual_seed(int(seed))
+    generator = cls(
+        img_size=(2, img_size, img_size),
+        acceleration=int(acceleration),
+        rng=rng,
+        device="cpu",
+    )
+    mask = generator.step(batch_size=int(batch_size))["mask"]
+    return mask.to(device=device)
 
 
 def make_gaussian_masks(
@@ -109,15 +189,14 @@ def make_gaussian_masks(
     batch_size: int,
 ) -> torch.Tensor:
     """One Cartesian Gaussian mask per sample (same family, distinct A)."""
-    rng = torch.Generator(device="cpu").manual_seed(int(seed) + int(acceleration) * 1009)
-    generator = GaussianMaskGenerator(
-        img_size=(2, img_size, img_size),
-        acceleration=int(acceleration),
-        rng=rng,
-        device="cpu",
+    return make_masks(
+        img_size,
+        acceleration,
+        seed=int(seed) + int(acceleration) * 1009,
+        device=device,
+        batch_size=batch_size,
+        family="gaussian",
     )
-    mask = generator.step(batch_size=int(batch_size))["mask"]
-    return mask.to(device=device)
 
 
 def make_mri_physics(mask: torch.Tensor, device: torch.device) -> dinv.physics.MRI:
@@ -148,23 +227,21 @@ class TaskData:
     physics: dinv.physics.MRI
     train: XYDataset
     eval: XYDataset
+    mask_family: str = "gaussian"
+    anatomy: str = "knee"
+
+    @property
+    def mask_generator(self) -> str:
+        return MASK_FAMILY_TO_CLASS.get(
+            str(self.mask_family).lower(), str(self.mask_family)
+        )
 
 
-def build_tasks(
+def _split_train_eval(
     x: torch.Tensor,
-    seed: int,
-    device: torch.device,
-    img_size: int = 128,
-    n_train: int | None = None,
-    n_eval: int = 0,
-) -> dict[str, TaskData]:
-    """T1 accel 4x then T2 accel 8x, same Gaussian Cartesian mask family.
-
-    Per-sample masks so buffer slots can be distinct (y, A). If n_eval>0,
-    eval slices are held out from train.
-    """
-    device = _resolve_device(device)
-    x = x.to(device)
+    n_train: int | None,
+    n_eval: int,
+) -> tuple[torch.Tensor, torch.Tensor]:
     n = int(x.shape[0])
     if n_train is None:
         n_train = n if n_eval <= 0 else n - int(n_eval)
@@ -175,45 +252,117 @@ def build_tasks(
             raise ValueError(
                 f"n_train ({n_train}) + n_eval ({n_eval}) exceeds n_images ({n})"
             )
-        x_train, x_eval = x[:n_train], x[n_train : n_train + n_eval]
+        return x[:n_train], x[n_train : n_train + n_eval]
+    return x[:n_train], x[:n_train]
+
+
+def _simulate_task(
+    name: str,
+    x_train: torch.Tensor,
+    x_eval: torch.Tensor,
+    *,
+    accel: int,
+    family: str,
+    anatomy: str,
+    seed: int,
+    device: torch.device,
+    img_size: int,
+) -> TaskData:
+    train_mask = make_masks(
+        img_size,
+        accel,
+        seed=mask_seed(seed, accel, family, anatomy=anatomy, task=name),
+        device=device,
+        batch_size=x_train.shape[0],
+        family=family,
+    )
+    eval_mask = make_masks(
+        img_size,
+        accel,
+        seed=mask_seed(
+            seed, accel, family, anatomy=anatomy, task=name, eval_split=True
+        ),
+        device=device,
+        batch_size=x_eval.shape[0],
+        family=family,
+    )
+    physics = make_mri_physics(train_mask[:1], device)
+    y_train = torch.stack(
+        [
+            physics(x_train[i : i + 1], mask=train_mask[i : i + 1])[0]
+            for i in range(x_train.shape[0])
+        ],
+        dim=0,
+    )
+    y_eval = torch.stack(
+        [
+            physics(x_eval[i : i + 1], mask=eval_mask[i : i + 1])[0]
+            for i in range(x_eval.shape[0])
+        ],
+        dim=0,
+    )
+    return TaskData(
+        name=name,
+        accel=int(accel),
+        physics=physics,
+        train=XYDataset(x_train.cpu(), y_train.cpu(), train_mask.cpu()),
+        eval=XYDataset(x_eval.cpu(), y_eval.cpu(), eval_mask.cpu()),
+        mask_family=str(family).lower(),
+        anatomy=str(anatomy).lower(),
+    )
+
+
+def build_tasks(
+    x: torch.Tensor,
+    seed: int,
+    device: torch.device,
+    img_size: int = 128,
+    n_train: int | None = None,
+    n_eval: int = 0,
+    t1_accel: int = 4,
+    t2_accel: int = 8,
+    t1_mask_family: str = "gaussian",
+    t2_mask_family: str = "gaussian",
+    t1_anatomy: str = "knee",
+    t2_anatomy: str = "knee",
+    x_t2: torch.Tensor | None = None,
+) -> dict[str, TaskData]:
+    """T1 then T2. Default: Gaussian Cartesian 4× → 8× on the same images.
+
+    Per-sample masks so buffer slots can be distinct (y, A). If n_eval>0,
+    eval slices are held out from train. Pass x_t2 for a different anatomy.
+    """
+    device = _resolve_device(device)
+    x = x.to(device)
+    x_train, x_eval = _split_train_eval(x, n_train, n_eval)
+    if x_t2 is None:
+        x2_train, x2_eval = x_train, x_eval
     else:
-        x_train = x[:n_train]
-        x_eval = x_train
-    tasks: dict[str, TaskData] = {}
-    for name, accel in (("T1", 4), ("T2", 8)):
-        train_mask = make_gaussian_masks(
-            img_size, accel, seed=seed, device=device, batch_size=x_train.shape[0]
-        )
-        eval_mask = make_gaussian_masks(
-            img_size,
-            accel,
-            seed=seed + 7919,
+        x2_train, x2_eval = _split_train_eval(x_t2.to(device), n_train, n_eval)
+    return {
+        "T1": _simulate_task(
+            "T1",
+            x_train,
+            x_eval,
+            accel=int(t1_accel),
+            family=t1_mask_family,
+            anatomy=t1_anatomy,
+            seed=seed,
             device=device,
-            batch_size=x_eval.shape[0],
-        )
-        physics = make_mri_physics(train_mask[:1], device)
-        y_train = torch.stack(
-            [
-                physics(x_train[i : i + 1], mask=train_mask[i : i + 1])[0]
-                for i in range(x_train.shape[0])
-            ],
-            dim=0,
-        )
-        y_eval = torch.stack(
-            [
-                physics(x_eval[i : i + 1], mask=eval_mask[i : i + 1])[0]
-                for i in range(x_eval.shape[0])
-            ],
-            dim=0,
-        )
-        tasks[name] = TaskData(
-            name=name,
-            accel=accel,
-            physics=physics,
-            train=XYDataset(x_train.cpu(), y_train.cpu(), train_mask.cpu()),
-            eval=XYDataset(x_eval.cpu(), y_eval.cpu(), eval_mask.cpu()),
-        )
-    return tasks
+            img_size=img_size,
+        ),
+        "T2": _simulate_task(
+            "T2",
+            x2_train,
+            x2_eval,
+            accel=int(t2_accel),
+            family=t2_mask_family,
+            anatomy=t2_anatomy,
+            seed=seed,
+            device=device,
+            img_size=img_size,
+        ),
+    }
 
 
 def task_operator_report(task: TaskData) -> dict[str, Any]:
@@ -221,6 +370,9 @@ def task_operator_report(task: TaskData) -> dict[str, Any]:
     return {
         "task": task.name,
         "accel": task.accel,
+        "mask_family": task.mask_family,
+        "mask_generator": task.mask_generator,
+        "anatomy": task.anatomy,
         "n_train": len(task.train),
         "n_eval": len(task.eval),
         "train_mask_ids": train_mask_ids,

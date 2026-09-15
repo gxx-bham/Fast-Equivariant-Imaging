@@ -24,6 +24,15 @@ TASKS = (
     {"name": "T1", "accel": 4},
     {"name": "T2", "accel": 8},
 )
+MASK_FAMILIES = ("gaussian", "random")
+ANATOMIES = ("knee", "brain")
+MASK_FAMILY_TO_CLASS = {
+    "gaussian": "deepinv.physics.generator.GaussianMaskGenerator",
+    "random": "deepinv.physics.generator.RandomMaskGenerator",
+}
+# Fine-tune forgetting gate: Fgt must be clearly > 0 (T1 PSNR drop after T2).
+# 0.2 dB is above the ~0.18 opposite-direction wiggle on the failed Cartesian 4×→8× try.
+CLEAR_POSITIVE_FGT = 0.2
 CSV_COLUMNS = ("arm", "N_buf", "seed", "PSNR_T1", "PSNR_T2", "Avg", "Fgt")
 PINNED_DEEPINV = "0.3.5"
 
@@ -43,6 +52,13 @@ class SmokeConfig:
     img_size: int = IMG_SIZE
     n_train: int = 2
     n_eval: int = 0  # 0 = eval on the train slices (tiny default)
+    t1_accel: int = 4
+    t2_accel: int = 8
+    t1_mask_family: str = "gaussian"
+    t2_mask_family: str = "gaussian"
+    t1_anatomy: str = ANATOMY
+    t2_anatomy: str = ANATOMY
+    gate: str = ""  # "B" same-knee mask-family; "A" knee→brain domain-incremental
     learning_rate: float = LEARNING_RATE
     weight_decay: float = WEIGHT_DECAY
     download: bool = True
