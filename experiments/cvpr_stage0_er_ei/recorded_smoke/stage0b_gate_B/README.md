@@ -22,3 +22,6 @@ same-knee mask-family (not Cartesian 4x->8x fallback)
 Gate readout: `Fine-tune Fgt=0.0810 <= 0.2 (need a clear T1 PSNR drop after T2).`.
 
 Distinct-slot proof: `n_distinct_ya=4`, `n_distinct_A=4`, slots in `metrics_nbuf4_seed1.json`.
+
+Fgt is technically positive but **not clearly > 0** (0.08 dB, below the 0.2 dB bar and smaller than the 0.18 dB opposite wiggle on Cartesian 4×→8×). Escalated to gate A. One B try only; no same-family Cartesian fallback.
+
