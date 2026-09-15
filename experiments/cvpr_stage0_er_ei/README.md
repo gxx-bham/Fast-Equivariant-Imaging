@@ -50,7 +50,7 @@ This is standard continual-learning forgetting on PSNR after T2. **Positive Fgt*
 - **Go:** ER+EI clearly better Fgt than ER+MC at `N_buf=1` **or** `N_buf=4`.
 - **Kill:** ER+EI \(\le\) ER+MC at **both** \(N\), or ER+EI only ties Fine-tune.
 
-The `--unit grid` readout prints this table. A **tiny CPU smoke is a pipeline check**, not a science decision. Treat go/kill as defined on a non-tiny `{1,4}` grid once the curves look real (seed 1, then 3).
+The `--unit grid` readout prints this table. Tiny CPU stubs are pipeline checks. `scripts/run_grid.sh` (150 epochs, `--no-tiny`) is the go/kill run; see `recorded_smoke/seed1_grid/`.
 
 ## Install
 
