@@ -2,4 +2,7 @@ Tiny seed=1 CPU stub (few iters) and demo-scale go/kill grid:
 
 - `data_physics.json` — unit (a): shapes + one untrained MoDL recon step
 - `seed1_nbuf1/` — few-iter stub, all three arms at N_buf=1 (pipeline only; INCONCLUSIVE)
-- `seed1_grid/` — 150-epoch CPU grid, N_buf ∈ {1, 4}, seed 1. Frozen readout: **KILL** (see that README).
+- `nbuf4_path_check/` — proves `--unit nbuf4` stores 4 distinct T1 `(y, A)`
+- `seed1_grid/` — 150-epoch CPU grid on the **old n=2 path** (pre-fix; not a valid N_buf=4 distinct-A run)
+- `stage0b_gate/` — Fine-tune-only forgetting gate (**FAIL**, Fgt stayed ≤ 0; no three-arm re-grid)
+

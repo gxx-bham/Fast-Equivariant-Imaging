@@ -1,0 +1,293 @@
+
+=== arm=finetune N_buf=4 seed=1 device=cpu tiny=False n_train=6 ===
+/home/ubuntu/.local/lib/python3.12/site-packages/deepinv/transform/rotate.py:47: UserWarning: The default interpolation mode will be changed to bilinear interpolation in the near future. Please specify the interpolation mode explicitly if you plan to keep using nearest interpolation.
+  warn(
+The model has 187019 trainable parameters
+Train epoch 0: MCLoss=1.53, EILoss=724.394, TotalLoss=725.923
+Train epoch 1: MCLoss=0.178, EILoss=0.206, TotalLoss=0.385
+Train epoch 2: MCLoss=0.073, EILoss=0.025, TotalLoss=0.099
+Train epoch 3: MCLoss=0.044, EILoss=0.013, TotalLoss=0.057
+Train epoch 4: MCLoss=0.03, EILoss=0.012, TotalLoss=0.042
+Train epoch 5: MCLoss=0.019, EILoss=0.011, TotalLoss=0.03
+Train epoch 6: MCLoss=0.016, EILoss=0.006, TotalLoss=0.023
+Train epoch 7: MCLoss=0.01, EILoss=0.007, TotalLoss=0.018
+Train epoch 8: MCLoss=0.007, EILoss=0.007, TotalLoss=0.014
+Train epoch 9: MCLoss=0.007, EILoss=0.005, TotalLoss=0.012
+Train epoch 10: MCLoss=0.006, EILoss=0.004, TotalLoss=0.01
+Train epoch 11: MCLoss=0.005, EILoss=0.005, TotalLoss=0.01
+Train epoch 12: MCLoss=0.004, EILoss=0.004, TotalLoss=0.008
+Train epoch 13: MCLoss=0.004, EILoss=0.004, TotalLoss=0.008
+Train epoch 14: MCLoss=0.003, EILoss=0.004, TotalLoss=0.007
+Train epoch 15: MCLoss=0.003, EILoss=0.004, TotalLoss=0.006
+Train epoch 16: MCLoss=0.003, EILoss=0.003, TotalLoss=0.006
+Train epoch 17: MCLoss=0.002, EILoss=0.003, TotalLoss=0.005
+Train epoch 18: MCLoss=0.002, EILoss=0.003, TotalLoss=0.005
+Train epoch 19: MCLoss=0.002, EILoss=0.003, TotalLoss=0.005
+Train epoch 20: MCLoss=0.002, EILoss=0.002, TotalLoss=0.004
+Train epoch 21: MCLoss=0.002, EILoss=0.002, TotalLoss=0.004
+Train epoch 22: MCLoss=0.002, EILoss=0.002, TotalLoss=0.004
+Train epoch 23: MCLoss=0.001, EILoss=0.002, TotalLoss=0.003
+Train epoch 24: MCLoss=0.001, EILoss=0.002, TotalLoss=0.003
+Train epoch 25: MCLoss=0.001, EILoss=0.002, TotalLoss=0.003
+Train epoch 26: MCLoss=0.001, EILoss=0.002, TotalLoss=0.003
+Train epoch 27: MCLoss=0.001, EILoss=0.002, TotalLoss=0.002
+Train epoch 28: MCLoss=0.001, EILoss=0.001, TotalLoss=0.002
+Train epoch 29: MCLoss=0.001, EILoss=0.001, TotalLoss=0.002
+Train epoch 30: MCLoss=0.0, EILoss=0.001, TotalLoss=0.002
+Train epoch 31: MCLoss=0.0, EILoss=0.001, TotalLoss=0.002
+Train epoch 32: MCLoss=0.0, EILoss=0.001, TotalLoss=0.002
+Train epoch 33: MCLoss=0.0, EILoss=0.001, TotalLoss=0.001
+Train epoch 34: MCLoss=0.0, EILoss=0.001, TotalLoss=0.001
+Train epoch 35: MCLoss=0.0, EILoss=0.001, TotalLoss=0.001
+Train epoch 36: MCLoss=0.0, EILoss=0.001, TotalLoss=0.001
+Train epoch 37: MCLoss=0.0, EILoss=0.001, TotalLoss=0.001
+Train epoch 38: MCLoss=0.0, EILoss=0.001, TotalLoss=0.001
+Train epoch 39: MCLoss=0.0, EILoss=0.001, TotalLoss=0.001
+Train epoch 40: MCLoss=0.0, EILoss=0.001, TotalLoss=0.001
+Train epoch 41: MCLoss=0.0, EILoss=0.001, TotalLoss=0.001
+Train epoch 42: MCLoss=0.0, EILoss=0.001, TotalLoss=0.001
+Train epoch 43: MCLoss=0.0, EILoss=0.001, TotalLoss=0.001
+Train epoch 44: MCLoss=0.0, EILoss=0.001, TotalLoss=0.001
+Train epoch 45: MCLoss=0.0, EILoss=0.001, TotalLoss=0.001
+Train epoch 46: MCLoss=0.0, EILoss=0.001, TotalLoss=0.001
+Train epoch 47: MCLoss=0.0, EILoss=0.001, TotalLoss=0.001
+Train epoch 48: MCLoss=0.0, EILoss=0.001, TotalLoss=0.001
+Train epoch 49: MCLoss=0.0, EILoss=0.001, TotalLoss=0.001
+Train epoch 50: MCLoss=0.0, EILoss=0.001, TotalLoss=0.001
+Train epoch 51: MCLoss=0.0, EILoss=0.001, TotalLoss=0.001
+Train epoch 52: MCLoss=0.0, EILoss=0.001, TotalLoss=0.001
+Train epoch 53: MCLoss=0.0, EILoss=0.001, TotalLoss=0.001
+Train epoch 54: MCLoss=0.0, EILoss=0.001, TotalLoss=0.001
+Train epoch 55: MCLoss=0.0, EILoss=0.001, TotalLoss=0.001
+Train epoch 56: MCLoss=0.0, EILoss=0.001, TotalLoss=0.001
+Train epoch 57: MCLoss=0.0, EILoss=0.001, TotalLoss=0.001
+Train epoch 58: MCLoss=0.0, EILoss=0.001, TotalLoss=0.001
+Train epoch 59: MCLoss=0.0, EILoss=0.001, TotalLoss=0.001
+Train epoch 60: MCLoss=0.0, EILoss=0.001, TotalLoss=0.001
+Train epoch 61: MCLoss=0.0, EILoss=0.001, TotalLoss=0.001
+Train epoch 62: MCLoss=0.0, EILoss=0.001, TotalLoss=0.001
+Train epoch 63: MCLoss=0.0, EILoss=0.001, TotalLoss=0.001
+Train epoch 64: MCLoss=0.0, EILoss=0.001, TotalLoss=0.001
+Train epoch 65: MCLoss=0.0, EILoss=0.001, TotalLoss=0.001
+Train epoch 66: MCLoss=0.0, EILoss=0.001, TotalLoss=0.001
+Train epoch 67: MCLoss=0.0, EILoss=0.001, TotalLoss=0.001
+Train epoch 68: MCLoss=0.0, EILoss=0.001, TotalLoss=0.001
+Train epoch 69: MCLoss=0.0, EILoss=0.001, TotalLoss=0.001
+Train epoch 70: MCLoss=0.0, EILoss=0.001, TotalLoss=0.001
+Train epoch 71: MCLoss=0.0, EILoss=0.001, TotalLoss=0.001
+Train epoch 72: MCLoss=0.0, EILoss=0.001, TotalLoss=0.001
+Train epoch 73: MCLoss=0.0, EILoss=0.001, TotalLoss=0.001
+Train epoch 74: MCLoss=0.0, EILoss=0.001, TotalLoss=0.001
+Train epoch 75: MCLoss=0.0, EILoss=0.001, TotalLoss=0.001
+Train epoch 76: MCLoss=0.0, EILoss=0.001, TotalLoss=0.001
+Train epoch 77: MCLoss=0.0, EILoss=0.001, TotalLoss=0.001
+Train epoch 78: MCLoss=0.0, EILoss=0.001, TotalLoss=0.001
+Train epoch 79: MCLoss=0.0, EILoss=0.001, TotalLoss=0.001
+The model has 187019 trainable parameters
+Train epoch 0: MCLoss=0.024, EILoss=0.12, TotalLoss=0.144
+Train epoch 1: MCLoss=0.006, EILoss=0.001, TotalLoss=0.007
+Train epoch 2: MCLoss=0.001, EILoss=0.001, TotalLoss=0.003
+Train epoch 3: MCLoss=0.0, EILoss=0.001, TotalLoss=0.001
+Train epoch 4: MCLoss=0.0, EILoss=0.001, TotalLoss=0.001
+Train epoch 5: MCLoss=0.0, EILoss=0.001, TotalLoss=0.001
+Train epoch 6: MCLoss=0.0, EILoss=0.001, TotalLoss=0.001
+Train epoch 7: MCLoss=0.0, EILoss=0.001, TotalLoss=0.001
+Train epoch 8: MCLoss=0.0, EILoss=0.001, TotalLoss=0.001
+Train epoch 9: MCLoss=0.0, EILoss=0.001, TotalLoss=0.001
+Train epoch 10: MCLoss=0.0, EILoss=0.0, TotalLoss=0.001
+Train epoch 11: MCLoss=0.0, EILoss=0.001, TotalLoss=0.001
+Train epoch 12: MCLoss=0.0, EILoss=0.0, TotalLoss=0.001
+Train epoch 13: MCLoss=0.0, EILoss=0.0, TotalLoss=0.001
+Train epoch 14: MCLoss=0.0, EILoss=0.001, TotalLoss=0.001
+Train epoch 15: MCLoss=0.0, EILoss=0.0, TotalLoss=0.001
+Train epoch 16: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 17: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 18: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 19: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 20: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 21: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 22: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 23: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 24: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 25: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 26: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 27: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 28: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 29: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 30: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 31: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 32: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 33: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 34: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 35: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 36: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 37: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 38: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 39: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 40: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 41: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 42: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 43: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 44: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 45: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 46: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 47: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 48: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 49: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 50: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 51: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 52: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 53: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 54: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 55: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 56: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 57: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 58: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 59: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 60: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 61: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 62: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 63: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 64: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 65: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 66: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 67: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 68: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 69: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 70: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 71: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 72: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 73: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 74: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 75: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 76: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 77: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 78: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 79: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 80: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 81: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 82: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 83: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 84: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 85: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 86: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 87: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 88: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 89: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 90: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 91: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 92: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 93: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 94: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 95: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 96: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 97: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 98: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 99: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 100: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 101: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 102: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 103: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 104: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 105: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 106: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 107: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 108: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 109: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 110: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 111: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 112: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 113: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 114: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 115: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 116: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 117: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 118: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 119: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 120: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 121: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 122: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 123: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 124: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 125: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 126: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 127: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 128: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 129: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 130: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 131: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 132: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 133: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 134: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 135: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 136: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 137: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 138: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 139: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 140: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 141: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 142: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 143: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 144: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 145: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 146: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 147: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 148: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+Train epoch 149: MCLoss=0.0, EILoss=0.0, TotalLoss=0.0
+{
+  "arm": "Fine-tune",
+  "N_buf": 4,
+  "seed": 1,
+  "PSNR_T1": 24.59031581878662,
+  "PSNR_T2": 22.18971347808838,
+  "Avg": 23.3900146484375,
+  "Fgt": -0.18365764617919922
+}
+buffer: {
+  "N_buf": 4,
+  "n_distinct_ya": 4,
+  "n_distinct_A": 4,
+  "holds_t1_A": true,
+  "accels": [
+    4,
+    4,
+    4,
+    4
+  ],
+  "slots": [
+    {
+      "slot": 0,
+      "y_id": "c991212198bf",
+      "mask_id": "658b2e826b6a"
+    },
+    {
+      "slot": 1,
+      "y_id": "1f3d769d36a0",
+      "mask_id": "8810346c1e3e"
+    },
+    {
+      "slot": 2,
+      "y_id": "3ed003237198",
+      "mask_id": "9cd3dd990f17"
+    },
+    {
+      "slot": 3,
+      "y_id": "a3001b0416fb",
+      "mask_id": "e2c537b8814c"
+    }
+  ]
+}
+
+Wrote recorded_smoke/stage0b_gate/try1/metrics_nbuf4_seed1.csv
+Wrote recorded_smoke/stage0b_gate/try1/metrics_nbuf4_seed1.json
+go/kill: {
+  "verdict": "INCONCLUSIVE",
+  "reason": "Need ER+EI and ER+MC Fgt at the evaluated N_buf values.",
+  "comparisons": [],
+  "n_buf_observed": [
+    4
+  ],
+  "grid_complete": false,
+  "tiny": false,
+  "note": "Go/kill is defined on Fgt after T2 (lower is better). Tiny stubs must not be labeled GO/KILL."
+}
