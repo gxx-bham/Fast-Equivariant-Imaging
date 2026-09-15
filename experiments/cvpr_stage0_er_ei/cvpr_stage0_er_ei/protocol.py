@@ -10,7 +10,7 @@ import deepinv as dinv
 import torch
 
 from .buffer import MeasurementBuffer
-from .config import ARM_LABELS, MASK_FAMILY_TO_CLASS, SmokeConfig
+from .config import ARM_LABELS, ARM_LOSSES, MASK_FAMILY_TO_CLASS, SmokeConfig
 from .data_physics import (
     build_cross_ip_tasks,
     build_tasks,
@@ -151,6 +151,11 @@ def run_arm(arm: str, cfg: SmokeConfig, out_dir: Path | None = None) -> dict[str
         psnr_t2_after_t2=psnr_t2_after_t2,
         psnr_t1_after_t1=psnr_t1_after_t1,
     )
+    row["arm_loss"] = (
+        "deepinv.loss.SupLoss (HQ MSE; MC/EI off)"
+        if cfg.supervised
+        else ARM_LOSSES[arm]
+    )
     wall_time_sec = float(time.time() - t_wall0)
     return {
         "row": row,
@@ -212,7 +217,12 @@ def run_arm(arm: str, cfg: SmokeConfig, out_dir: Path | None = None) -> dict[str
         "train_loss": (
             "deepinv.loss.SupLoss (HQ MSE; MC/EI off)"
             if cfg.supervised
-            else "MCLoss() + EILoss(Rotate(n_trans=4))"
+            else ARM_LOSSES[arm]
+        ),
+        "arm_loss": (
+            "deepinv.loss.SupLoss (HQ MSE; MC/EI off)"
+            if cfg.supervised
+            else ARM_LOSSES[arm]
         ),
         "domain_incremental": str(tasks["T1"].anatomy) != str(tasks["T2"].anatomy),
         "mask_family_to_class": dict(MASK_FAMILY_TO_CLASS),

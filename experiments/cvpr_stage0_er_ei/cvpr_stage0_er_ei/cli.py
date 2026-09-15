@@ -11,6 +11,7 @@ from pathlib import Path
 import deepinv as dinv
 
 from .config import (
+    ARM_LOSSES,
     ARMS,
     CT_DEMO_IMG_SIZE,
     CT_DEMO_N_ANGLES,
@@ -260,6 +261,19 @@ def _payload_config(cfg: SmokeConfig, arms: tuple[str, ...]) -> dict:
             if cfg.supervised
             else "MCLoss() + EILoss(Rotate(n_trans=4))"
         ),
+        "arm_losses": (
+            {
+                "Fine-tune": "deepinv.loss.SupLoss (HQ MSE; MC/EI off)",
+                "ER+MC": "deepinv.loss.SupLoss (HQ MSE; MC/EI off)",
+                "ER+EI": "deepinv.loss.SupLoss (HQ MSE; MC/EI off)",
+            }
+            if cfg.supervised
+            else {
+                "Fine-tune": ARM_LOSSES["finetune"],
+                "ER+MC": ARM_LOSSES["er_mc"],
+                "ER+EI": ARM_LOSSES["er_ei"],
+            }
+        ),
         "physics": (
             (
                 f"T1 deepinv.physics.MRI + {MASK_FAMILY_TO_CLASS[cfg.t1_mask_family]} "
@@ -278,7 +292,7 @@ def _payload_config(cfg: SmokeConfig, arms: tuple[str, ...]) -> dict:
     }
 
 
-def _run_arms(cfg: SmokeConfig, arms: tuple[str, ...]) -> list[dict]:
+def _run_arms(cfg: SmokeConfig, arms: tuple[str, ...]) -> dict:
     out_dir = Path(cfg.out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     rows = []
@@ -357,11 +371,17 @@ def _run_arms(cfg: SmokeConfig, arms: tuple[str, ...]) -> list[dict]:
     if cfg.gate:
         print("forgetting_gate:", json.dumps(payload["forgetting_gate"], indent=2))
     print(f"device={payload['device']} elapsed_sec={elapsed_sec:.1f}")
-    return rows
+    return payload
 
 
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
+    if args.supervised and args.cross_ip:
+        raise SystemExit(
+            "cross-IP stream must stay unsupervised (MC/EI). Do not pass --supervised."
+        )
+    if tuple(N_BUF_GRID) != (1, 4):
+        raise SystemExit("frozen N_buf grid is {1, 4}; do not expand to 16.")
     if args.unit == "data":
         report = smoke_data_physics(
             seed=args.seed,
@@ -407,35 +427,65 @@ def main(argv: list[str] | None = None) -> int:
     if args.unit == "grid":
         t0 = time.time()
         all_rows = []
+        cell_payloads = []
         for n_buf in N_BUF_GRID:
             cfg = _cfg_from_args(args, n_buf=int(n_buf))
             if cfg.n_buf != int(n_buf):
                 raise SystemExit(f"grid failed to honor N_buf={n_buf} (got {cfg.n_buf})")
             cfg.out_dir = str(Path(cfg.out_dir) / f"nbuf{n_buf}")
             arms = tuple(a.strip() for a in args.arms.split(",") if a.strip()) or ARMS
-            all_rows.extend(_run_arms(cfg, arms))
+            cell = _run_arms(cfg, arms)
+            all_rows.extend(cell["rows"])
+            cell_payloads.append(cell)
         elapsed_sec = time.time() - t0
         grid_dir = Path(args.out or (_package_root() / "recorded_smoke" / f"seed{args.seed}"))
         cfg0 = _cfg_from_args(args, n_buf=int(N_BUF_GRID[0]))
+        go_kill = go_kill_readout(all_rows, tiny=cfg0.tiny)
         write_csv(grid_dir / "metrics_grid.csv", all_rows)
         write_json(
             grid_dir / "metrics_grid.json",
             {
+                "label": (
+                    "cross-IP continual"
+                    if cfg0.cross_ip
+                    else "operator-incremental unsupervised MRI"
+                ),
                 "device": cfg0.device,
                 "seed": cfg0.seed,
                 "epochs": cfg0.epochs,
+                "epochs_t1": cfg0.t1_epochs(),
+                "epochs_t2": cfg0.t2_epochs(),
                 "tiny": cfg0.tiny,
+                "supervised": bool(cfg0.supervised),
+                "cross_ip": bool(cfg0.cross_ip),
+                "physics_class_t1": "deepinv.physics.MRI",
+                "physics_class_t2": (
+                    "deepinv.physics.Tomography"
+                    if cfg0.cross_ip
+                    else "deepinv.physics.MRI"
+                ),
+                "ct_n_angles": cfg0.ct_n_angles if cfg0.cross_ip else None,
+                "ct_img_size": cfg0.ct_img_size if cfg0.cross_ip else None,
+                "arm_losses": _payload_config(cfg0, ARMS)["arm_losses"],
                 "n_train": cfg0.n_train,
                 "n_eval": cfg0.n_eval,
                 "N_buf_grid": list(N_BUF_GRID),
                 "deepinv_version": getattr(dinv, "__version__", "unknown"),
                 "max_batch_steps": cfg0.max_batch_steps,
                 "elapsed_sec": elapsed_sec,
+                "fgt_formula": "after_T1.PSNR_T1 - after_T2.PSNR_T1",
+                "fgt_definition": (
+                    "Fgt = after_T1.PSNR_T1 - after_T2.PSNR_T1 on the T1 MRI test set only; "
+                    "T2 CT PSNR is logged separately and is not used in Fgt. "
+                    "Avg = 0.5 * (PSNR_T1_after_T2 + PSNR_T2_after_T2). "
+                    "CSV PSNR_T1/PSNR_T2 are after T2. Lower Fgt is better."
+                ),
                 "rows": all_rows,
-                "go_kill": go_kill_readout(all_rows, tiny=cfg0.tiny),
+                "cells": cell_payloads,
+                "go_kill": go_kill,
             },
         )
-        print("grid go/kill:", json.dumps(go_kill_readout(all_rows, tiny=cfg0.tiny), indent=2))
+        print("grid go/kill:", json.dumps(go_kill, indent=2))
         print(f"device={cfg0.device} elapsed_sec={elapsed_sec:.1f}")
         return 0
 

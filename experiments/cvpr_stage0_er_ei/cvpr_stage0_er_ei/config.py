@@ -20,6 +20,19 @@ ARM_LABELS = {
     "er_mc": "ER+MC",
     "er_ei": "ER+EI",
 }
+# Frozen unsupervised losses (same as Gate E current-task path). Not HQ SupLoss.
+ARM_LOSSES = {
+    "finetune": (
+        "current: MCLoss() + EILoss(Rotate(n_trans=4)); no buffer replay"
+    ),
+    "er_mc": (
+        "current: MCLoss() + EILoss(Rotate(n_trans=4)); buffer: MCLoss only"
+    ),
+    "er_ei": (
+        "current: MCLoss() + EILoss(Rotate(n_trans=4)); "
+        "buffer: MCLoss() + EILoss(Rotate(n_trans=4))"
+    ),
+}
 TASKS = (
     {"name": "T1", "accel": 4},
     {"name": "T2", "accel": 8},
