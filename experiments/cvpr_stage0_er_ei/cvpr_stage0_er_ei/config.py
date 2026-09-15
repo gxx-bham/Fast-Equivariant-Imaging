@@ -58,7 +58,8 @@ class SmokeConfig:
     t2_mask_family: str = "gaussian"
     t1_anatomy: str = ANATOMY
     t2_anatomy: str = ANATOMY
-    gate: str = ""  # "B" mask-family; "A" knee→brain; "D" domain+operator composite
+    gate: str = ""  # "B" mask-family; "A" knee→brain; "D" composite; "F" Step-3 supervised
+    supervised: bool = False  # True: HQ SupLoss only (MC/EI off) for this gate
     learning_rate: float = LEARNING_RATE
     weight_decay: float = WEIGHT_DECAY
     download: bool = True

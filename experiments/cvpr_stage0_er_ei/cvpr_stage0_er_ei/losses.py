@@ -17,6 +17,11 @@ def current_task_losses() -> list[Loss]:
     ]
 
 
+def supervised_losses() -> list[Loss]:
+    """HQ supervised MSE via deepinv.loss.SupLoss. MC/EI are off."""
+    return [dinv.loss.SupLoss()]
+
+
 class BufferReplayLoss(Loss):
     """ER loss on a uniform sample from the (y, A) buffer.
 

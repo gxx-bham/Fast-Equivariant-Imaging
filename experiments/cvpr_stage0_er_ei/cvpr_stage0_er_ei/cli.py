@@ -97,12 +97,19 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     )
     parser.add_argument(
         "--gate",
-        choices=("B", "A", "D"),
+        choices=("B", "A", "D", "F"),
         default=None,
         help=(
             "Fine-tune forgetting gate label: B=same-knee mask-family; "
-            "A=knee→brain; D=domain+operator composite (A+B stacked)."
+            "A=knee→brain; D=domain+operator composite (A+B stacked); "
+            "F=Step-3 supervised HQ Fine-tune on stream D."
         ),
+    )
+    parser.add_argument(
+        "--supervised",
+        action="store_true",
+        default=False,
+        help="Train with deepinv.loss.SupLoss (HQ MSE). Turns off MC/EI as the main loss.",
     )
     parser.add_argument("--out", type=str, default="")
     parser.add_argument("--no-download", action="store_true")
@@ -165,6 +172,7 @@ def _cfg_from_args(args: argparse.Namespace, n_buf: int | None = None) -> SmokeC
         t1_anatomy=args.t1_anatomy,
         t2_anatomy=args.t2_anatomy,
         gate=args.gate or "",
+        supervised=bool(args.supervised),
         download=not args.no_download,
         out_dir=out,
     )
@@ -197,23 +205,32 @@ def _payload_config(cfg: SmokeConfig, arms: tuple[str, ...]) -> dict:
             or int(cfg.t1_accel) != int(cfg.t2_accel)
         ),
         "claim_scope": (
-            "domain+operator composite drift (A+B stacked)"
-            if cfg.gate == "D"
+            "Step-3 supervised Fine-tune on stream D (domain+operator composite); HQ SupLoss, MC/EI off"
+            if cfg.gate == "F" or cfg.supervised
             else (
-                "domain-incremental (not same-knee accel-only)"
-                if cfg.gate == "A"
+                "domain+operator composite drift (A+B stacked)"
+                if cfg.gate == "D"
                 else (
-                    "same-knee mask-family (not Cartesian 4x->8x fallback)"
-                    if cfg.gate == "B"
-                    else "operator-incremental unsupervised MRI"
+                    "domain-incremental (not same-knee accel-only)"
+                    if cfg.gate == "A"
+                    else (
+                        "same-knee mask-family (not Cartesian 4x->8x fallback)"
+                        if cfg.gate == "B"
+                        else "operator-incremental unsupervised MRI"
+                    )
                 )
             )
         ),
+        "supervised": bool(cfg.supervised),
         "device": cfg.device,
         "deepinv_version": getattr(dinv, "__version__", "unknown"),
         "deepinv_pinned": PINNED_DEEPINV,
         "backbone": "deepinv.models.MoDL",
-        "losses_current": "MCLoss() + EILoss(Rotate(n_trans=4))",
+        "losses_current": (
+            "deepinv.loss.SupLoss (HQ MSE; MC/EI off)"
+            if cfg.supervised
+            else "MCLoss() + EILoss(Rotate(n_trans=4))"
+        ),
         "physics": (
             f"deepinv.physics.MRI + {MASK_FAMILY_TO_CLASS[cfg.t1_mask_family]} "
             f"({cfg.t1_anatomy} {cfg.t1_accel}x) then "
@@ -233,7 +250,8 @@ def _run_arms(cfg: SmokeConfig, arms: tuple[str, ...]) -> list[dict]:
         print(
             f"\n=== arm={arm} N_buf={cfg.n_buf} seed={cfg.seed} "
             f"device={cfg.device} tiny={cfg.tiny} n_train={cfg.n_train} "
-            f"gate={cfg.gate or '-'} T1={cfg.t1_anatomy}/{cfg.t1_mask_family}/{cfg.t1_accel}x "
+            f"gate={cfg.gate or '-'} supervised={cfg.supervised} "
+            f"T1={cfg.t1_anatomy}/{cfg.t1_mask_family}/{cfg.t1_accel}x "
             f"T2={cfg.t2_anatomy}/{cfg.t2_mask_family}/{cfg.t2_accel}x ==="
         )
         result = run_arm(arm, cfg, out_dir=out_dir)
@@ -273,9 +291,14 @@ def _run_arms(cfg: SmokeConfig, arms: tuple[str, ...]) -> list[dict]:
         "go_kill": go_kill_readout(rows, tiny=cfg.tiny),
         "elapsed_sec": elapsed_sec,
         "device": details[0]["device"] if details else cfg.device,
+        "supervised": bool(cfg.supervised),
+        "n_distinct_ya": (
+            int(details[0]["buffer"]["n_distinct_ya"]) if details else None
+        ),
         "distinct_slot_proof": proofs[0] if len(proofs) == 1 else proofs,
+        "fgt_formula": "after_T1.PSNR_T1 - after_T2.PSNR_T1",
         "fgt_definition": (
-            "Fgt = PSNR_T1_after_T1 - PSNR_T1_after_T2; "
+            "Fgt = after_T1.PSNR_T1 - after_T2.PSNR_T1; "
             "Avg = 0.5 * (PSNR_T1_after_T2 + PSNR_T2_after_T2). "
             "CSV PSNR_T1/PSNR_T2 are after T2."
         ),

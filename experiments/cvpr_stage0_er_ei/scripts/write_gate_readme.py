@@ -33,7 +33,9 @@ def main(argv: list[str]) -> int:
     after_t2 = detail["after_T2"]
     label = meta.get("label", "") or cfg.get("claim_scope", "")
     gate_id = cfg.get("gate") or meta.get("gate") or "?"
-    if gate_id == "D":
+    if gate_id == "F" or bool(cfg.get("supervised")):
+        scope = "Step-3 supervised Fine-tune on stream D"
+    elif gate_id == "D":
         scope = "domain+operator composite drift"
     elif bool(cfg.get("domain_incremental")):
         scope = "domain-incremental"
@@ -50,6 +52,8 @@ def main(argv: list[str]) -> int:
 | | |
 | --- | --- |
 | device | {payload.get("device") or cfg.get("device")} |
+| supervised | {payload.get("supervised", cfg.get("supervised"))} |
+| train_loss | {cfg.get("losses_current")} |
 | wall (s) | {meta.get("elapsed_sec", payload.get("elapsed_sec"))} |
 | n_train / n_eval | {cfg.get("n_train")} / {cfg.get("n_eval")} (held-out) |
 | N_buf fill | {proof.get("n_distinct_ya")} distinct T1 (y,A); holds_t1_A={proof.get("holds_t1_A")} |

@@ -13,7 +13,7 @@ from .buffer import MeasurementBuffer
 from .config import ARM_LABELS, MASK_FAMILY_TO_CLASS, SmokeConfig
 from .data_physics import build_tasks, load_anatomy_slices, task_operator_report
 from .logging_utils import summary_row
-from .losses import current_task_losses, losses_for_arm
+from .losses import current_task_losses, losses_for_arm, supervised_losses
 from .train_eval import eval_psnr, make_modl, set_seed, train_task
 
 
@@ -64,10 +64,11 @@ def run_arm(arm: str, cfg: SmokeConfig, out_dir: Path | None = None) -> dict[str
     model = make_modl(device)
     save_path = None if out_dir is None else str(out_dir / "ckpts" / arm)
 
+    t1_losses = supervised_losses() if cfg.supervised else current_task_losses()
     train_task(
         model,
         tasks["T1"],
-        losses=current_task_losses(),
+        losses=t1_losses,
         cfg=cfg,
         device=device,
         save_path=save_path,
@@ -93,7 +94,10 @@ def run_arm(arm: str, cfg: SmokeConfig, out_dir: Path | None = None) -> dict[str
             f"{cfg.n_buf} distinct past measurements."
         )
 
-    t2_losses = losses_for_arm(arm, buffer=None if arm == "finetune" else buffer)
+    if cfg.supervised:
+        t2_losses = supervised_losses()
+    else:
+        t2_losses = losses_for_arm(arm, buffer=None if arm == "finetune" else buffer)
     train_task(
         model,
         tasks["T2"],
@@ -160,6 +164,12 @@ def run_arm(arm: str, cfg: SmokeConfig, out_dir: Path | None = None) -> dict[str
             "n_eval": len(tasks["T1"].eval),
         },
         "gate": cfg.gate,
+        "supervised": bool(cfg.supervised),
+        "train_loss": (
+            "deepinv.loss.SupLoss (HQ MSE; MC/EI off)"
+            if cfg.supervised
+            else "MCLoss() + EILoss(Rotate(n_trans=4))"
+        ),
         "domain_incremental": str(tasks["T1"].anatomy) != str(tasks["T2"].anatomy),
         "mask_family_to_class": dict(MASK_FAMILY_TO_CLASS),
     }
