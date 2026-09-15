@@ -33,6 +33,13 @@ MASK_FAMILY_TO_CLASS = {
 # Fine-tune forgetting gate: Fgt must be clearly > 0 (T1 PSNR drop after T2).
 # 0.2 dB is above the ~0.18 opposite-direction wiggle on the failed Cartesian 4×→8× try.
 CLEAR_POSITIVE_FGT = 0.2
+# deepinv 0.3.5 examples/physics/demo_physics_tour.py — sparse Radon, 20 views, 64×64.
+CT_DEMO_N_ANGLES = 20
+CT_DEMO_IMG_SIZE = 64
+CT_DEMO_SOURCE = (
+    "deepinv==0.3.5 examples/physics/demo_physics_tour.py "
+    "(Tomography, angles=20, img_width=64)"
+)
 CSV_COLUMNS = ("arm", "N_buf", "seed", "PSNR_T1", "PSNR_T2", "Avg", "Fgt")
 PINNED_DEEPINV = "0.3.5"
 
@@ -58,8 +65,11 @@ class SmokeConfig:
     t2_mask_family: str = "gaussian"
     t1_anatomy: str = ANATOMY
     t2_anatomy: str = ANATOMY
-    gate: str = ""  # "B" mask-family; "A" knee→brain; "D" composite; "F" Step-3 supervised
+    gate: str = ""  # B/A/D/F/E
     supervised: bool = False  # True: HQ SupLoss only (MC/EI off) for this gate
+    cross_ip: bool = False  # Gate E: T1 MRI → T2 CT Tomography
+    ct_n_angles: int = CT_DEMO_N_ANGLES
+    ct_img_size: int = CT_DEMO_IMG_SIZE
     learning_rate: float = LEARNING_RATE
     weight_decay: float = WEIGHT_DECAY
     download: bool = True

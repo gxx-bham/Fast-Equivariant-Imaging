@@ -97,20 +97,29 @@ def eval_psnr(
     """PSNR vs HQ on this task's eval measurements. Used only at eval."""
     model.eval()
     loader = make_loader(task.eval, batch_size=batch_size, shuffle=False)
-    metric = dinv.metric.PSNR(complex_abs=True)
     scores: list[float] = []
     for batch in loader:
         if len(batch) == 3:
             x, y, params = batch
-            mask = params["mask"].to(device)
+            mask = params.get("mask") if isinstance(params, dict) else None
         else:
             x, y = batch
-            mask = task.eval.mask[: x.shape[0]].to(device)
+            mask = None
         x = x.to(device)
         y = y.to(device)
-        physics = make_mri_physics(mask, device)
+        if mask is not None:
+            physics = make_mri_physics(mask.to(device), device)
+        else:
+            physics = task.physics.to(device) if hasattr(task.physics, "to") else task.physics
         x_net = model(y, physics)
-        scores.extend(metric(x_net, x).detach().cpu().flatten().tolist())
+        if getattr(task, "modality", "mri") == "ct":
+            metric = dinv.metric.PSNR()
+            scores.extend(
+                metric(x_net[:, :1], x[:, :1]).detach().cpu().flatten().tolist()
+            )
+        else:
+            metric = dinv.metric.PSNR(complex_abs=True)
+            scores.extend(metric(x_net, x).detach().cpu().flatten().tolist())
     if not scores:
         raise RuntimeError(f"empty eval loader for task {task.name}")
     return float(sum(scores) / len(scores))

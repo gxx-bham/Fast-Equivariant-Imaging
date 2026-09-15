@@ -11,7 +11,13 @@ import torch
 
 from .buffer import MeasurementBuffer
 from .config import ARM_LABELS, MASK_FAMILY_TO_CLASS, SmokeConfig
-from .data_physics import build_tasks, load_anatomy_slices, task_operator_report
+from .data_physics import (
+    build_cross_ip_tasks,
+    build_tasks,
+    load_anatomy_slices,
+    load_ct100_tiles,
+    task_operator_report,
+)
 from .logging_utils import summary_row
 from .losses import current_task_losses, losses_for_arm, supervised_losses
 from .train_eval import eval_psnr, make_modl, set_seed, train_task
@@ -26,41 +32,68 @@ def _device(cfg: SmokeConfig) -> torch.device:
 def run_arm(arm: str, cfg: SmokeConfig, out_dir: Path | None = None) -> dict[str, Any]:
     if arm not in ARM_LABELS:
         raise ValueError(f"unknown arm {arm!r}")
+    if cfg.cross_ip and cfg.supervised:
+        raise ValueError(
+            "Gate E / cross-IP Fine-tune must use unsupervised MC/EI, not SupLoss"
+        )
     device = _device(cfg)
     set_seed(cfg.seed)
     t_wall0 = time.time()
     n_eval = int(cfg.n_eval)
     n_total = int(cfg.n_train) + (n_eval if n_eval > 0 else 0)
     n_total = max(n_total, int(cfg.n_train))
-    x_t1 = load_anatomy_slices(
-        anatomy=cfg.t1_anatomy,
-        img_size=cfg.img_size,
-        download=cfg.download,
-        n_total=n_total,
-    )
-    x_t2 = None
-    if str(cfg.t2_anatomy).lower() != str(cfg.t1_anatomy).lower():
-        x_t2 = load_anatomy_slices(
-            anatomy=cfg.t2_anatomy,
+    if cfg.cross_ip:
+        x_t1 = load_anatomy_slices(
+            anatomy=cfg.t1_anatomy,
             img_size=cfg.img_size,
             download=cfg.download,
             n_total=n_total,
         )
-    tasks = build_tasks(
-        x_t1,
-        seed=cfg.seed,
-        device=device,
-        img_size=cfg.img_size,
-        n_train=cfg.n_train,
-        n_eval=n_eval,
-        t1_accel=cfg.t1_accel,
-        t2_accel=cfg.t2_accel,
-        t1_mask_family=cfg.t1_mask_family,
-        t2_mask_family=cfg.t2_mask_family,
-        t1_anatomy=cfg.t1_anatomy,
-        t2_anatomy=cfg.t2_anatomy,
-        x_t2=x_t2,
-    )
+        x_ct = load_ct100_tiles(img_size=cfg.ct_img_size, n_total=n_total)
+        tasks = build_cross_ip_tasks(
+            x_t1,
+            x_ct,
+            seed=cfg.seed,
+            device=device,
+            n_train=cfg.n_train,
+            n_eval=n_eval,
+            t1_accel=cfg.t1_accel,
+            t1_mask_family=cfg.t1_mask_family,
+            t1_anatomy=cfg.t1_anatomy,
+            mri_img_size=cfg.img_size,
+            ct_img_size=cfg.ct_img_size,
+            ct_n_angles=cfg.ct_n_angles,
+        )
+    else:
+        x_t1 = load_anatomy_slices(
+            anatomy=cfg.t1_anatomy,
+            img_size=cfg.img_size,
+            download=cfg.download,
+            n_total=n_total,
+        )
+        x_t2 = None
+        if str(cfg.t2_anatomy).lower() != str(cfg.t1_anatomy).lower():
+            x_t2 = load_anatomy_slices(
+                anatomy=cfg.t2_anatomy,
+                img_size=cfg.img_size,
+                download=cfg.download,
+                n_total=n_total,
+            )
+        tasks = build_tasks(
+            x_t1,
+            seed=cfg.seed,
+            device=device,
+            img_size=cfg.img_size,
+            n_train=cfg.n_train,
+            n_eval=n_eval,
+            t1_accel=cfg.t1_accel,
+            t2_accel=cfg.t2_accel,
+            t1_mask_family=cfg.t1_mask_family,
+            t2_mask_family=cfg.t2_mask_family,
+            t1_anatomy=cfg.t1_anatomy,
+            t2_anatomy=cfg.t2_anatomy,
+            x_t2=x_t2,
+        )
     model = make_modl(device)
     save_path = None if out_dir is None else str(out_dir / "ckpts" / arm)
 
@@ -158,6 +191,13 @@ def run_arm(arm: str, cfg: SmokeConfig, out_dir: Path | None = None) -> dict[str
             "t2_mask_family": tasks["T2"].mask_family,
             "mask_generator_t1": tasks["T1"].mask_generator,
             "mask_generator_t2": tasks["T2"].mask_generator,
+            "physics_class_t1": tasks["T1"].physics_class,
+            "physics_class_t2": tasks["T2"].physics_class,
+            "modality_t1": tasks["T1"].modality,
+            "modality_t2": tasks["T2"].modality,
+            "ct_n_angles": tasks["T2"].n_angles,
+            "t1_img_size": tasks["T1"].img_size,
+            "t2_img_size": tasks["T2"].img_size,
             "epochs_t1": cfg.t1_epochs(),
             "epochs_t2": cfg.t2_epochs(),
             "n_train": len(tasks["T1"].train),
@@ -165,6 +205,10 @@ def run_arm(arm: str, cfg: SmokeConfig, out_dir: Path | None = None) -> dict[str
         },
         "gate": cfg.gate,
         "supervised": bool(cfg.supervised),
+        "cross_ip": bool(cfg.cross_ip),
+        "physics_class_t1": tasks["T1"].physics_class,
+        "physics_class_t2": tasks["T2"].physics_class,
+        "ct_n_angles": tasks["T2"].n_angles,
         "train_loss": (
             "deepinv.loss.SupLoss (HQ MSE; MC/EI off)"
             if cfg.supervised

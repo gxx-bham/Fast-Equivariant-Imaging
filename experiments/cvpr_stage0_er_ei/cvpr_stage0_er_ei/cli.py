@@ -10,7 +10,16 @@ from pathlib import Path
 
 import deepinv as dinv
 
-from .config import ARMS, MASK_FAMILY_TO_CLASS, N_BUF_GRID, PINNED_DEEPINV, SmokeConfig
+from .config import (
+    ARMS,
+    CT_DEMO_IMG_SIZE,
+    CT_DEMO_N_ANGLES,
+    CT_DEMO_SOURCE,
+    MASK_FAMILY_TO_CLASS,
+    N_BUF_GRID,
+    PINNED_DEEPINV,
+    SmokeConfig,
+)
 from .data_physics import smoke_data_physics
 from .logging_utils import (
     distinct_slot_proof,
@@ -97,12 +106,11 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     )
     parser.add_argument(
         "--gate",
-        choices=("B", "A", "D", "F"),
+        choices=("B", "A", "D", "F", "E"),
         default=None,
         help=(
-            "Fine-tune forgetting gate label: B=same-knee mask-family; "
-            "A=knee→brain; D=domain+operator composite (A+B stacked); "
-            "F=Step-3 supervised HQ Fine-tune on stream D."
+            "Fine-tune forgetting gate: B mask-family; A knee→brain; "
+            "D domain+operator; F supervised on D; E cross-IP MRI→CT."
         ),
     )
     parser.add_argument(
@@ -110,6 +118,12 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         action="store_true",
         default=False,
         help="Train with deepinv.loss.SupLoss (HQ MSE). Turns off MC/EI as the main loss.",
+    )
+    parser.add_argument(
+        "--cross-ip",
+        action="store_true",
+        default=False,
+        help="T2 is deepinv Tomography CT (physics-tour 20-view 64×64). Unsupervised MC/EI.",
     )
     parser.add_argument("--out", type=str, default="")
     parser.add_argument("--no-download", action="store_true")
@@ -173,6 +187,9 @@ def _cfg_from_args(args: argparse.Namespace, n_buf: int | None = None) -> SmokeC
         t2_anatomy=args.t2_anatomy,
         gate=args.gate or "",
         supervised=bool(args.supervised),
+        cross_ip=bool(args.cross_ip),
+        ct_n_angles=CT_DEMO_N_ANGLES,
+        ct_img_size=CT_DEMO_IMG_SIZE,
         download=not args.no_download,
         out_dir=out,
     )
@@ -205,23 +222,35 @@ def _payload_config(cfg: SmokeConfig, arms: tuple[str, ...]) -> dict:
             or int(cfg.t1_accel) != int(cfg.t2_accel)
         ),
         "claim_scope": (
-            "Step-3 supervised Fine-tune on stream D (domain+operator composite); HQ SupLoss, MC/EI off"
-            if cfg.gate == "F" or cfg.supervised
+            "cross-IP continual (T1 MRI knee Gaussian 4× → T2 deepinv Tomography CT)"
+            if cfg.gate == "E" or cfg.cross_ip
             else (
-                "domain+operator composite drift (A+B stacked)"
-                if cfg.gate == "D"
+                "Step-3 supervised Fine-tune on stream D (domain+operator composite); HQ SupLoss, MC/EI off"
+                if cfg.gate == "F" or cfg.supervised
                 else (
-                    "domain-incremental (not same-knee accel-only)"
-                    if cfg.gate == "A"
+                    "domain+operator composite drift (A+B stacked)"
+                    if cfg.gate == "D"
                     else (
-                        "same-knee mask-family (not Cartesian 4x->8x fallback)"
-                        if cfg.gate == "B"
-                        else "operator-incremental unsupervised MRI"
+                        "domain-incremental (not same-knee accel-only)"
+                        if cfg.gate == "A"
+                        else (
+                            "same-knee mask-family (not Cartesian 4x->8x fallback)"
+                            if cfg.gate == "B"
+                            else "operator-incremental unsupervised MRI"
+                        )
                     )
                 )
             )
         ),
         "supervised": bool(cfg.supervised),
+        "cross_ip": bool(cfg.cross_ip),
+        "physics_class_t1": "deepinv.physics.MRI",
+        "physics_class_t2": (
+            "deepinv.physics.Tomography" if cfg.cross_ip else "deepinv.physics.MRI"
+        ),
+        "ct_n_angles": cfg.ct_n_angles if cfg.cross_ip else None,
+        "ct_img_size": cfg.ct_img_size if cfg.cross_ip else None,
+        "ct_demo_source": CT_DEMO_SOURCE if cfg.cross_ip else None,
         "device": cfg.device,
         "deepinv_version": getattr(dinv, "__version__", "unknown"),
         "deepinv_pinned": PINNED_DEEPINV,
@@ -232,10 +261,19 @@ def _payload_config(cfg: SmokeConfig, arms: tuple[str, ...]) -> dict:
             else "MCLoss() + EILoss(Rotate(n_trans=4))"
         ),
         "physics": (
-            f"deepinv.physics.MRI + {MASK_FAMILY_TO_CLASS[cfg.t1_mask_family]} "
-            f"({cfg.t1_anatomy} {cfg.t1_accel}x) then "
-            f"{MASK_FAMILY_TO_CLASS[cfg.t2_mask_family]} "
-            f"({cfg.t2_anatomy} {cfg.t2_accel}x), per-sample A"
+            (
+                f"T1 deepinv.physics.MRI + {MASK_FAMILY_TO_CLASS[cfg.t1_mask_family]} "
+                f"({cfg.t1_anatomy} {cfg.t1_accel}x); "
+                f"T2 deepinv.physics.Tomography (angles={cfg.ct_n_angles}, "
+                f"img_width={cfg.ct_img_size}) from {CT_DEMO_SOURCE}"
+            )
+            if cfg.cross_ip
+            else (
+                f"deepinv.physics.MRI + {MASK_FAMILY_TO_CLASS[cfg.t1_mask_family]} "
+                f"({cfg.t1_anatomy} {cfg.t1_accel}x) then "
+                f"{MASK_FAMILY_TO_CLASS[cfg.t2_mask_family]} "
+                f"({cfg.t2_anatomy} {cfg.t2_accel}x), per-sample A"
+            )
         ),
     }
 
@@ -250,9 +288,9 @@ def _run_arms(cfg: SmokeConfig, arms: tuple[str, ...]) -> list[dict]:
         print(
             f"\n=== arm={arm} N_buf={cfg.n_buf} seed={cfg.seed} "
             f"device={cfg.device} tiny={cfg.tiny} n_train={cfg.n_train} "
-            f"gate={cfg.gate or '-'} supervised={cfg.supervised} "
+            f"gate={cfg.gate or '-'} supervised={cfg.supervised} cross_ip={cfg.cross_ip} "
             f"T1={cfg.t1_anatomy}/{cfg.t1_mask_family}/{cfg.t1_accel}x "
-            f"T2={cfg.t2_anatomy}/{cfg.t2_mask_family}/{cfg.t2_accel}x ==="
+            f"T2={'ct/Tomography/' + str(cfg.ct_n_angles) if cfg.cross_ip else cfg.t2_anatomy + '/' + cfg.t2_mask_family + '/' + str(cfg.t2_accel) + 'x'} ==="
         )
         result = run_arm(arm, cfg, out_dir=out_dir)
         if int(result["N_buf"]) != int(cfg.n_buf):
@@ -292,17 +330,23 @@ def _run_arms(cfg: SmokeConfig, arms: tuple[str, ...]) -> list[dict]:
         "elapsed_sec": elapsed_sec,
         "device": details[0]["device"] if details else cfg.device,
         "supervised": bool(cfg.supervised),
+        "cross_ip": bool(cfg.cross_ip),
         "n_distinct_ya": (
             int(details[0]["buffer"]["n_distinct_ya"]) if details else None
         ),
         "distinct_slot_proof": proofs[0] if len(proofs) == 1 else proofs,
         "fgt_formula": "after_T1.PSNR_T1 - after_T2.PSNR_T1",
         "fgt_definition": (
-            "Fgt = after_T1.PSNR_T1 - after_T2.PSNR_T1; "
+            "Fgt = after_T1.PSNR_T1 - after_T2.PSNR_T1 on the T1 MRI test set only; "
+            "T2 CT PSNR is logged separately and is not used in Fgt. "
             "Avg = 0.5 * (PSNR_T1_after_T2 + PSNR_T2_after_T2). "
             "CSV PSNR_T1/PSNR_T2 are after T2."
         ),
     }
+    if details:
+        payload["physics_class_t1"] = details[0].get("physics_class_t1")
+        payload["physics_class_t2"] = details[0].get("physics_class_t2")
+        payload["ct_n_angles"] = details[0].get("ct_n_angles")
     if cfg.gate:
         payload["forgetting_gate"] = finetune_forgetting_gate(rows)
         payload["schedule"] = details[0].get("schedule") if details else None

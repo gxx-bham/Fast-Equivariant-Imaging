@@ -18,9 +18,15 @@ import deepinv as dinv
 from deepinv.datasets import SimpleFastMRISliceDataset
 from deepinv.models import MoDL
 from deepinv.physics.generator import GaussianMaskGenerator, RandomMaskGenerator
+from deepinv.utils.demo import load_example
 
 from .buffer import tensor_id
-from .config import MASK_FAMILY_TO_CLASS
+from .config import (
+    CT_DEMO_IMG_SIZE,
+    CT_DEMO_N_ANGLES,
+    CT_DEMO_SOURCE,
+    MASK_FAMILY_TO_CLASS,
+)
 
 
 def _resolve_device(device: str | torch.device | None) -> torch.device:
@@ -199,24 +205,94 @@ def make_gaussian_masks(
     )
 
 
+def as_modl_channels(x: torch.Tensor) -> torch.Tensor:
+    """MoDL DnCNN is 2-channel (real/imag). Real CT is stacked as (real, 0)."""
+    if x.ndim != 4:
+        raise ValueError(f"expected NCHW, got {tuple(x.shape)}")
+    if x.shape[1] == 2:
+        return x
+    if x.shape[1] == 1:
+        return torch.cat([x, torch.zeros_like(x)], dim=1)
+    raise ValueError(f"expected 1 or 2 channels, got {tuple(x.shape)}")
+
+
+def _nonoverlap_tiles(x: torch.Tensor, size: int) -> torch.Tensor:
+    _n, _c, h, w = x.shape
+    if h == size and w == size:
+        return x
+    if h < size or w < size:
+        return torch.nn.functional.interpolate(
+            x, size=(size, size), mode="bilinear", align_corners=False
+        )
+    tiles = [
+        x[:, :, y0 : y0 + size, x0 : x0 + size]
+        for y0 in range(0, h - size + 1, size)
+        for x0 in range(0, w - size + 1, size)
+    ]
+    return torch.cat(tiles, dim=0)
+
+
+def load_ct100_tiles(
+    img_size: int = CT_DEMO_IMG_SIZE,
+    n_total: int = 8,
+) -> torch.Tensor:
+    """deepinv demo CT100 slice, tiled to the CT demo spatial size.
+
+    Source image: `CT100_256x256_0.pt` from deepinv.utils.load_example.
+    Physics-tour demo uses 64×64; 256 tiles into 16 non-overlapping 64 crops.
+    """
+    x = load_example("CT100_256x256_0.pt")
+    if x.ndim == 3:
+        x = x.unsqueeze(0)
+    x = _nonoverlap_tiles(x, int(img_size))[: int(n_total)]
+    if x.shape[0] < int(n_total):
+        raise RuntimeError(
+            f"Requested n_total={n_total} CT tiles but only loaded {x.shape[0]}"
+        )
+    return as_modl_channels(x)
+
+
 def make_mri_physics(mask: torch.Tensor, device: torch.device) -> dinv.physics.MRI:
     return dinv.physics.MRI(mask=mask.to(device), device=device)
 
 
-class XYDataset(Dataset):
-    """Offline (x, y, {mask}) triples. x is HQ and must not enter training losses."""
+def make_ct_physics(
+    img_width: int,
+    n_angles: int,
+    device: torch.device,
+) -> dinv.physics.Tomography:
+    """Copy deepinv 0.3.5 physics-tour sparse-view Tomography geometry."""
+    return dinv.physics.Tomography(
+        img_width=int(img_width),
+        angles=int(n_angles),
+        device=device,
+        normalize=True,
+    )
 
-    def __init__(self, x: torch.Tensor, y: torch.Tensor, mask: torch.Tensor):
-        if x.shape[0] != y.shape[0] or x.shape[0] != mask.shape[0]:
-            raise ValueError("x, y, mask must share the sample dimension")
+
+class XYDataset(Dataset):
+    """Offline (x, y[, {mask}]) triples. x is HQ and must not enter unsupervised losses."""
+
+    def __init__(
+        self,
+        x: torch.Tensor,
+        y: torch.Tensor,
+        mask: torch.Tensor | None = None,
+    ):
+        if x.shape[0] != y.shape[0]:
+            raise ValueError("x and y must share the sample dimension")
+        if mask is not None and x.shape[0] != mask.shape[0]:
+            raise ValueError("mask must share the sample dimension")
         self.x = x.detach().cpu().contiguous()
         self.y = y.detach().cpu().contiguous()
-        self.mask = mask.detach().cpu().contiguous()
+        self.mask = None if mask is None else mask.detach().cpu().contiguous()
 
     def __len__(self) -> int:
         return int(self.x.shape[0])
 
     def __getitem__(self, index: int):
+        if self.mask is None:
+            return self.x[index], self.y[index]
         return self.x[index], self.y[index], {"mask": self.mask[index]}
 
 
@@ -224,14 +300,20 @@ class XYDataset(Dataset):
 class TaskData:
     name: str
     accel: int
-    physics: dinv.physics.MRI
+    physics: dinv.physics.Physics
     train: XYDataset
     eval: XYDataset
     mask_family: str = "gaussian"
     anatomy: str = "knee"
+    modality: str = "mri"
+    physics_class: str = "deepinv.physics.MRI"
+    n_angles: int | None = None
+    img_size: int | None = None
 
     @property
     def mask_generator(self) -> str:
+        if self.modality == "ct":
+            return self.physics_class
         return MASK_FAMILY_TO_CLASS.get(
             str(self.mask_family).lower(), str(self.mask_family)
         )
@@ -309,6 +391,9 @@ def _simulate_task(
         eval=XYDataset(x_eval.cpu(), y_eval.cpu(), eval_mask.cpu()),
         mask_family=str(family).lower(),
         anatomy=str(anatomy).lower(),
+        modality="mri",
+        physics_class="deepinv.physics.MRI",
+        img_size=int(img_size),
     )
 
 
@@ -365,18 +450,102 @@ def build_tasks(
     }
 
 
+def simulate_ct_task(
+    x: torch.Tensor,
+    *,
+    n_train: int,
+    n_eval: int,
+    n_angles: int,
+    img_size: int,
+    device: torch.device,
+    name: str = "T2",
+) -> TaskData:
+    """Sparse-view CT task. Geometry copied from deepinv 0.3.5 physics tour."""
+    device = _resolve_device(device)
+    x = as_modl_channels(x.to(device))
+    x_train, x_eval = _split_train_eval(x, n_train, n_eval)
+    physics = make_ct_physics(img_width=img_size, n_angles=n_angles, device=device)
+    y_train = torch.stack(
+        [physics(x_train[i : i + 1])[0] for i in range(x_train.shape[0])], dim=0
+    )
+    y_eval = torch.stack(
+        [physics(x_eval[i : i + 1])[0] for i in range(x_eval.shape[0])], dim=0
+    )
+    return TaskData(
+        name=name,
+        accel=int(n_angles),
+        physics=physics,
+        train=XYDataset(x_train.cpu(), y_train.cpu(), mask=None),
+        eval=XYDataset(x_eval.cpu(), y_eval.cpu(), mask=None),
+        mask_family="tomography",
+        anatomy="ct100",
+        modality="ct",
+        physics_class="deepinv.physics.Tomography",
+        n_angles=int(n_angles),
+        img_size=int(img_size),
+    )
+
+
+def build_cross_ip_tasks(
+    x_mri: torch.Tensor,
+    x_ct: torch.Tensor,
+    seed: int,
+    device: torch.device,
+    *,
+    n_train: int,
+    n_eval: int,
+    t1_accel: int = 4,
+    t1_mask_family: str = "gaussian",
+    t1_anatomy: str = "knee",
+    mri_img_size: int = 128,
+    ct_img_size: int = CT_DEMO_IMG_SIZE,
+    ct_n_angles: int = CT_DEMO_N_ANGLES,
+) -> dict[str, TaskData]:
+    """T1 MRI (D-aligned) then T2 sparse-view CT. Eval sets are separate."""
+    device = _resolve_device(device)
+    t1 = _simulate_task(
+        "T1",
+        *_split_train_eval(x_mri.to(device), n_train, n_eval),
+        accel=int(t1_accel),
+        family=t1_mask_family,
+        anatomy=t1_anatomy,
+        seed=seed,
+        device=device,
+        img_size=mri_img_size,
+    )
+    t2 = simulate_ct_task(
+        x_ct,
+        n_train=n_train,
+        n_eval=n_eval,
+        n_angles=ct_n_angles,
+        img_size=ct_img_size,
+        device=device,
+        name="T2",
+    )
+    return {"T1": t1, "T2": t2}
+
+
 def task_operator_report(task: TaskData) -> dict[str, Any]:
-    train_mask_ids = [tensor_id(task.train.mask[i]) for i in range(len(task.train))]
+    if task.train.mask is None:
+        train_mask_ids = []
+        n_distinct_train_A = 1
+    else:
+        train_mask_ids = [tensor_id(task.train.mask[i]) for i in range(len(task.train))]
+        n_distinct_train_A = len(set(train_mask_ids))
     return {
         "task": task.name,
         "accel": task.accel,
+        "modality": task.modality,
+        "physics_class": task.physics_class,
+        "n_angles": task.n_angles,
+        "img_size": task.img_size,
         "mask_family": task.mask_family,
         "mask_generator": task.mask_generator,
         "anatomy": task.anatomy,
         "n_train": len(task.train),
         "n_eval": len(task.eval),
         "train_mask_ids": train_mask_ids,
-        "n_distinct_train_A": len(set(train_mask_ids)),
+        "n_distinct_train_A": n_distinct_train_A,
         "held_out_eval": len(task.eval) > 0
         and (
             len(task.eval) != len(task.train)

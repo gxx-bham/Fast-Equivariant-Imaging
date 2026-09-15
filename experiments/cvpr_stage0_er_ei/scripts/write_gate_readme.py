@@ -33,7 +33,9 @@ def main(argv: list[str]) -> int:
     after_t2 = detail["after_T2"]
     label = meta.get("label", "") or cfg.get("claim_scope", "")
     gate_id = cfg.get("gate") or meta.get("gate") or "?"
-    if gate_id == "F" or bool(cfg.get("supervised")):
+    if gate_id == "E" or bool(cfg.get("cross_ip")):
+        scope = "cross-IP continual"
+    elif gate_id == "F" or bool(cfg.get("supervised")):
         scope = "Step-3 supervised Fine-tune on stream D"
     elif gate_id == "D":
         scope = "domain+operator composite drift"
