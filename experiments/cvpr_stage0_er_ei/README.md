@@ -104,13 +104,13 @@ Documented `N_buf=4` cell (same three arms):
 bash scripts/run_nbuf4.sh
 ```
 
-Full `{1,4}` go/kill grid:
+Full `{1,4}` go/kill grid (demo-scale: 150 epochs, `--no-tiny`; GPU if available, else CPU):
 
 ```bash
 bash scripts/run_grid.sh
 ```
 
-Tiny mode uses `--epochs 1 --max-steps 2` so the CPU path finishes. Drop `--tiny` / pass `--no-tiny` and raise `--epochs` / `--max-steps` when you want a real (still not paper-scale) run. GPU is optional.
+Tiny mode uses `--epochs 1 --max-steps 2` so the CPU path finishes. `run_grid.sh` is the go/kill run: 150 epochs (deepinv MRI EI demo from-scratch order of magnitude) on the same 128×128 mini knee set. GPU is used when `torch.cuda.is_available()`, otherwise CPU, and the device is labeled in the log.
 
 ## Logs
 

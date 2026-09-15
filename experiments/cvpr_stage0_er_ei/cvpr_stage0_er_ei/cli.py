@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+import time
 from pathlib import Path
 
 from .config import ARMS, N_BUF_GRID, SmokeConfig
@@ -143,19 +144,32 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     if args.unit == "grid":
+        t0 = time.time()
         all_rows = []
         for n_buf in N_BUF_GRID:
             cfg = _cfg_from_args(args, n_buf=n_buf)
             cfg.out_dir = str(Path(cfg.out_dir) / f"nbuf{n_buf}")
             arms = tuple(a.strip() for a in args.arms.split(",") if a.strip()) or ARMS
             all_rows.extend(_run_arms(cfg, arms))
+        elapsed_sec = time.time() - t0
         grid_dir = Path(args.out or (_package_root() / "recorded_smoke" / f"seed{args.seed}"))
+        cfg0 = _cfg_from_args(args, n_buf=N_BUF_GRID[0])
         write_csv(grid_dir / "metrics_grid.csv", all_rows)
         write_json(
             grid_dir / "metrics_grid.json",
-            {"rows": all_rows, "go_kill": go_kill_readout(all_rows)},
+            {
+                "device": cfg0.device,
+                "seed": cfg0.seed,
+                "epochs": cfg0.epochs,
+                "tiny": cfg0.tiny,
+                "max_batch_steps": cfg0.max_batch_steps,
+                "elapsed_sec": elapsed_sec,
+                "rows": all_rows,
+                "go_kill": go_kill_readout(all_rows),
+            },
         )
         print("grid go/kill:", json.dumps(go_kill_readout(all_rows), indent=2))
+        print(f"device={cfg0.device} elapsed_sec={elapsed_sec:.1f}")
         return 0
 
     raise RuntimeError(f"unhandled unit {args.unit}")
