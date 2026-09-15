@@ -66,6 +66,8 @@ python3 -m pip install -r requirements.txt
 
 CPU is enough for the tiny smoke. GPU is optional (`--device cuda`).
 
+Pin **deepinv==0.3.5** (the Trainer API this package uses, including `disable_train_metrics`). `make_trainer` also drops unknown Trainer kwargs so a newer wheel does not hard-fail if that flag was renamed.
+
 By using the mini FastMRI subset that deepinv downloads, you confirm that you have agreed to the FastMRI data use agreement.
 
 ## How to run
@@ -98,11 +100,15 @@ PYTHONPATH=. python3 -m cvpr_stage0_er_ei --unit nbuf1 --tiny --seed 1 --n-buf 1
   --arms finetune,er_mc,er_ei --device cpu --out recorded_smoke/seed1_nbuf1
 ```
 
-Documented `N_buf=4` cell (same three arms):
+Documented `N_buf=4` cell (`--unit nbuf4 --n-buf 4`; this must not use `--unit nbuf1`):
 
 ```bash
 bash scripts/run_nbuf4.sh
 ```
+
+`--unit nbuf1` always sets `N_buf=1` and errors if you pass `--n-buf` other than 1. `--unit nbuf4` always sets `N_buf=4` and errors if you pass `--n-buf` other than 4. `--unit grid` runs `{1, 4}` and rejects `--n-buf`. Tiny stubs are forced to `go_kill.verdict=INCONCLUSIVE`.
+
+JSON logs include `N_buf`, `deepinv_version`, per-slot `y_id` / `mask_id`, `n_distinct_ya`, and `holds_t1_A`. Non-tiny `N_buf=4` raises if the buffer cannot store 4 distinct `(y, A)` (`--n-train` must be ≥ 4). `--n-eval > 0` holds eval slices out of train.
 
 Full `{1,4}` go/kill grid (demo-scale: 150 epochs, `--no-tiny`; GPU if available, else CPU):
 

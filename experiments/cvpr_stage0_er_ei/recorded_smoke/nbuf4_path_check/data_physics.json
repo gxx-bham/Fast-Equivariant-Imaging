@@ -1,0 +1,76 @@
+{
+  "x_shape": [
+    6,
+    2,
+    128,
+    128
+  ],
+  "T1_y_shape": [
+    4,
+    2,
+    128,
+    128
+  ],
+  "T2_y_shape": [
+    4,
+    2,
+    128,
+    128
+  ],
+  "T1_mask_shape": [
+    4,
+    2,
+    128,
+    128
+  ],
+  "T2_mask_shape": [
+    4,
+    2,
+    128,
+    128
+  ],
+  "T1_accel": 4,
+  "T2_accel": 8,
+  "recon_shape": [
+    1,
+    2,
+    128,
+    128
+  ],
+  "one_step_psnr_t1": -9.283219337463379,
+  "device": "cpu",
+  "n_images": 6,
+  "n_train": 4,
+  "n_eval": 2,
+  "operators": {
+    "T1": {
+      "task": "T1",
+      "accel": 4,
+      "n_train": 4,
+      "n_eval": 2,
+      "train_mask_ids": [
+        "658b2e826b6a",
+        "01068589f773",
+        "9cd3dd990f17",
+        "e2c537b8814c"
+      ],
+      "n_distinct_train_A": 4,
+      "held_out_eval": true
+    },
+    "T2": {
+      "task": "T2",
+      "accel": 8,
+      "n_train": 4,
+      "n_eval": 2,
+      "train_mask_ids": [
+        "d473697c2dbc",
+        "12e985691e64",
+        "98721374beaf",
+        "b31bd71e90ff"
+      ],
+      "n_distinct_train_A": 4,
+      "held_out_eval": true
+    }
+  },
+  "deepinv_version": "0.3.5"
+}

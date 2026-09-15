@@ -60,12 +60,16 @@ def write_json(path: Path, payload: Any) -> None:
         handle.write("\n")
 
 
-def go_kill_readout(rows: Iterable[Mapping[str, Any]]) -> dict[str, Any]:
+def go_kill_readout(
+    rows: Iterable[Mapping[str, Any]],
+    *,
+    tiny: bool = False,
+) -> dict[str, Any]:
     """Apply frozen go/kill rules to after-T2 Fgt numbers.
 
     Go: ER+EI clearly better Fgt than ER+MC at N_buf=1 or 4.
     Kill: ER+EI <= ER+MC at both N, or only ties Fine-tune.
-    Tiny smokes are pipeline checks; do not treat them as a paper decision.
+    Tiny stubs are pipeline checks and must not be labeled GO/KILL.
     """
     by_key: dict[tuple[str, int], float] = {}
     finetune_fgt: dict[int, float] = {}
@@ -142,14 +146,23 @@ def go_kill_readout(rows: Iterable[Mapping[str, Any]]) -> dict[str, Any]:
             verdict = "KILL"
             reason = "ER+EI does not beat ER+MC and only ties or loses to Fine-tune."
 
-    return {
+    result = {
         "verdict": verdict,
         "reason": reason,
         "comparisons": comparisons,
         "n_buf_observed": observed,
         "grid_complete": grid_complete,
+        "tiny": bool(tiny),
         "note": (
             "Go/kill is defined on Fgt after T2 (lower is better). "
-            "Tiny CPU smokes verify the pipeline; they are not a science decision."
+            "Tiny stubs must not be labeled GO/KILL."
         ),
     }
+    if tiny:
+        result["would_have_been"] = result["verdict"]
+        result["verdict"] = "INCONCLUSIVE"
+        result["reason"] = (
+            "Tiny stub (few iters) is a pipeline check, not a go/kill decision. "
+            + result["reason"]
+        )
+    return result

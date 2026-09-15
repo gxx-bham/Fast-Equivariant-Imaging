@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import inspect
+from dataclasses import replace
 from pathlib import Path
 
 import torch
@@ -11,7 +13,7 @@ import deepinv as dinv
 from deepinv.models import MoDL
 
 from .config import LEARNING_RATE, WEIGHT_DECAY, SmokeConfig
-from .data_physics import TaskData, XYDataset
+from .data_physics import TaskData, XYDataset, make_mri_physics
 
 
 def set_seed(seed: int) -> None:
@@ -35,6 +37,13 @@ def make_loader(dataset: XYDataset, batch_size: int, shuffle: bool) -> DataLoade
     )
 
 
+def _trainer_field_names() -> set[str]:
+    fields = getattr(dinv.Trainer, "__dataclass_fields__", None)
+    if fields:
+        return set(fields)
+    return set(inspect.signature(dinv.Trainer.__init__).parameters)
+
+
 def make_trainer(
     model: torch.nn.Module,
     physics,
@@ -44,7 +53,12 @@ def make_trainer(
     cfg: SmokeConfig,
     save_path: str | Path | None,
 ):
-    return dinv.Trainer(
+    """Build dinv.Trainer with kwargs filtered to the installed deepinv API.
+
+    0.3.5 uses disable_train_metrics; some later wheels use compute_train_metrics.
+    """
+    names = _trainer_field_names()
+    kwargs: dict = dict(
         model=model,
         physics=physics,
         optimizer=torch.optim.Adam(
@@ -57,7 +71,6 @@ def make_trainer(
         device=device,
         save_path=save_path,
         metrics=dinv.metric.PSNR(complex_abs=True),
-        disable_train_metrics=True,
         plot_images=False,
         plot_measurements=False,
         verbose=True,
@@ -66,6 +79,12 @@ def make_trainer(
         ckp_interval=10**9,
         early_stop=False,
     )
+    if "disable_train_metrics" in names:
+        kwargs["disable_train_metrics"] = True
+    elif "compute_train_metrics" in names:
+        kwargs["compute_train_metrics"] = False
+    kwargs = {k: v for k, v in kwargs.items() if k in names}
+    return dinv.Trainer(**kwargs)
 
 
 @torch.no_grad()
@@ -80,10 +99,16 @@ def eval_psnr(
     loader = make_loader(task.eval, batch_size=batch_size, shuffle=False)
     metric = dinv.metric.PSNR(complex_abs=True)
     scores: list[float] = []
-    physics = task.physics
-    for x, y in loader:
+    for batch in loader:
+        if len(batch) == 3:
+            x, y, params = batch
+            mask = params["mask"].to(device)
+        else:
+            x, y = batch
+            mask = task.eval.mask[: x.shape[0]].to(device)
         x = x.to(device)
         y = y.to(device)
+        physics = make_mri_physics(mask, device)
         x_net = model(y, physics)
         scores.extend(metric(x_net, x).detach().cpu().flatten().tolist())
     if not scores:
@@ -98,7 +123,10 @@ def train_task(
     cfg: SmokeConfig,
     device: torch.device,
     save_path: str | Path | None,
+    epochs: int | None = None,
 ) -> None:
+    if epochs is not None:
+        cfg = replace(cfg, epochs=int(epochs))
     loader = make_loader(task.train, batch_size=cfg.batch_size, shuffle=True)
     trainer = make_trainer(
         model=model,
@@ -112,5 +140,4 @@ def train_task(
     trainer.train()
 
 
-# Re-export locked optimizer constants so callers can log them.
 OPTIMIZER_DEFAULTS = {"lr": LEARNING_RATE, "weight_decay": WEIGHT_DECAY}

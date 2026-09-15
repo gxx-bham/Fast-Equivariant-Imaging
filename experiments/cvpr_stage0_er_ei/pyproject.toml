@@ -12,7 +12,7 @@ license = { text = "GPL-3.0-only" }
 dependencies = [
     "torch>=2.2",
     "torchvision",
-    "deepinv>=0.3.5",
+    "deepinv==0.3.5",
     "numpy",
 ]
 

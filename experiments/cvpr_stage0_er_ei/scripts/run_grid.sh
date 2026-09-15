@@ -19,6 +19,7 @@ START_EPOCH=$(date +%s)
 START_UTC=$(date -u +%Y-%m-%dT%H:%M:%SZ)
 
 python3 -m cvpr_stage0_er_ei --unit grid --no-tiny --epochs 150 --seed 1 \
+  --n-train 6 --n-eval 2 \
   --arms finetune,er_mc,er_ei --device "${DEVICE}" \
   --out "${OUT}" 2>&1 | tee "${OUT}/run.log"
 
