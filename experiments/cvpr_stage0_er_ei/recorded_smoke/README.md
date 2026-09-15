@@ -10,5 +10,5 @@ Tiny seed=1 CPU stub (few iters) and demo-scale go/kill grid:
 - `stage0b_gate_D/` — Gate D **domain+operator composite** (knee Gaussian 4× → brain `RandomMaskGenerator` 8×) (**FAIL**, Fgt=+0.162, not clearly > 0.2). Last unsupervised Fgt gate.
 - `stage0b_gate_F_supervised/` — Step 3 supervised Fine-tune on stream D (HQ `SupLoss`, MC/EI off). **PASS**, Fgt=**+3.480 dB**. No E, no three-arm.
 - `stage0b_gate_E/` — Gate E **cross-IP continual**: T1 MRI knee Gaussian 4× → T2 `deepinv.physics.Tomography` (physics-tour **40**-view 64×64; not TomographyWithAstra). Unsupervised MC/EI. **PASS**, Fgt=**+2.577 dB**. Stop three-arm. `superseded_angles20/` is the 0.3.5-tag 20-view try (Fgt=+2.290; not the readout).
-- `stage0b_crossip_grid/` — Stream-E three-arm go/kill grid (Fine-tune | ER+MC | ER+EI × `N_buf∈{1,4}`). Cross-IP continual. Unsupervised. Not 16.
+- `stage0b_crossip_grid/` — Stream-E three-arm go/kill grid (Fine-tune | ER+MC | ER+EI × `N_buf∈{1,4}`). Cross-IP continual. Unsupervised. **GO** (ER+EI lower Fgt than ER+MC at both N). Not 16.
 

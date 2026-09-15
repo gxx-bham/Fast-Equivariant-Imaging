@@ -1,0 +1,23 @@
+label=cross-IP continual
+supervised=false
+cross_ip=true
+physics_class_t1=deepinv.physics.MRI
+physics_class_t2=deepinv.physics.Tomography
+ct_n_angles=40
+ct_img_size=64
+n_buf_grid=1,4
+arms=finetune,er_mc,er_ei
+arm_loss_finetune=current: MCLoss() + EILoss(Rotate(n_trans=4)); no buffer replay
+arm_loss_er_mc=current: MCLoss() + EILoss(Rotate(n_trans=4)); buffer: MCLoss only
+arm_loss_er_ei=current: MCLoss() + EILoss(Rotate(n_trans=4)); buffer: MCLoss() + EILoss(Rotate(n_trans=4))
+stream=T1 knee Gaussian Cartesian 4x -> T2 CT Tomography 40-view 64x64
+fgt=after_T1.PSNR_T1 - after_T2.PSNR_T1 (T1 MRI test only; lower is better)
+device=cpu
+n_train=6
+n_eval=2
+epochs_t1=80
+epochs_t2=160
+tiny=false
+start_utc=2026-09-15T16:31:45Z
+end_utc=2026-09-15T20:01:40Z
+elapsed_sec=12595
