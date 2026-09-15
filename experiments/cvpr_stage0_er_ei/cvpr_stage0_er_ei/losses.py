@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import torch
-
 import deepinv as dinv
 from deepinv.loss import Loss
 
