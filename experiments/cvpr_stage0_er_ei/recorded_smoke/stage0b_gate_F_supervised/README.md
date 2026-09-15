@@ -24,3 +24,5 @@ Step-3 supervised Fine-tune on stream D (domain+operator composite); HQ SupLoss,
 Gate readout: `Fine-tune Fgt=3.4800 > 0.2 (need a clear T1 PSNR drop after T2).`.
 
 Distinct-slot proof: `n_distinct_ya=4`, `n_distinct_A=4`, slots in `metrics_nbuf4_seed1.json`.
+
+Exact Fgt = **+3.480 dB** (`after_T1.PSNR_T1` 25.848 − `after_T2.PSNR_T1` 22.368). Clearly > 0.2. **Stop three-arm.** E (CT) waits for another freeze. Do not rewrite claim-1 Avg.
