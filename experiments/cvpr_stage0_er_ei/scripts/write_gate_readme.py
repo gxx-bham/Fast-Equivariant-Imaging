@@ -31,13 +31,15 @@ def main(argv: list[str]) -> int:
     schedule = payload.get("schedule") or detail.get("schedule") or {}
     after_t1 = detail["after_T1"]
     after_t2 = detail["after_T2"]
-    label = meta.get("label", "")
+    label = meta.get("label", "") or cfg.get("claim_scope", "")
     gate_id = cfg.get("gate") or meta.get("gate") or "?"
-    domain = bool(cfg.get("domain_incremental"))
-    heading = (
-        f"# stage-0b Fine-tune forgetting gate {gate_id}"
-        + (" — domain-incremental" if domain else " — same-knee mask-family")
-    )
+    if gate_id == "D":
+        scope = "domain+operator composite drift"
+    elif bool(cfg.get("domain_incremental")):
+        scope = "domain-incremental"
+    else:
+        scope = "same-knee mask-family"
+    heading = f"# stage-0b Fine-tune forgetting gate {gate_id} — {scope}"
     verdict = gate.get("verdict", "UNKNOWN")
     body = f"""{heading}
 

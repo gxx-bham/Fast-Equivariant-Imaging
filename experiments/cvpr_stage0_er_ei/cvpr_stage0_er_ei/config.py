@@ -58,7 +58,7 @@ class SmokeConfig:
     t2_mask_family: str = "gaussian"
     t1_anatomy: str = ANATOMY
     t2_anatomy: str = ANATOMY
-    gate: str = ""  # "B" same-knee mask-family; "A" knee→brain domain-incremental
+    gate: str = ""  # "B" mask-family; "A" knee→brain; "D" domain+operator composite
     learning_rate: float = LEARNING_RATE
     weight_decay: float = WEIGHT_DECAY
     download: bool = True

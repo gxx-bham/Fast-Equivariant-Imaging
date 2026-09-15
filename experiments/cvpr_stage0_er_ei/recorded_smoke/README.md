@@ -6,5 +6,6 @@ Tiny seed=1 CPU stub (few iters) and demo-scale go/kill grid:
 - `seed1_grid/` — 150-epoch CPU grid on the **old n=2 path** (pre-fix; not a valid N_buf=4 distinct-A run)
 - `stage0b_gate/` — Fine-tune-only forgetting gate, **same-family Cartesian 4×→8×** (**FAIL**, Fgt stayed ≤ 0)
 - `stage0b_gate_B/` — Gate B same-knee T1 Gaussian 4× → T2 `RandomMaskGenerator` 8× (**FAIL**, Fgt=+0.081, not clearly > 0)
-- `stage0b_gate_A/` — Gate A **domain-incremental** knee → brain mini RSS (**FAIL**, Fgt=−1.085). No three-arm grid.
+- `stage0b_gate_A/` — Gate A **domain-incremental** knee → brain mini RSS (**FAIL**, Fgt=−1.085)
+- `stage0b_gate_D/` — Gate D **domain+operator composite** (knee Gaussian 4× → brain `RandomMaskGenerator` 8×). Last Fgt gate; no three-arm grid.
 

@@ -97,9 +97,12 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     )
     parser.add_argument(
         "--gate",
-        choices=("B", "A"),
+        choices=("B", "A", "D"),
         default=None,
-        help="Fine-tune forgetting gate label: B=same-knee mask-family; A=knee→brain.",
+        help=(
+            "Fine-tune forgetting gate label: B=same-knee mask-family; "
+            "A=knee→brain; D=domain+operator composite (A+B stacked)."
+        ),
     )
     parser.add_argument("--out", type=str, default="")
     parser.add_argument("--no-download", action="store_true")
@@ -189,6 +192,23 @@ def _payload_config(cfg: SmokeConfig, arms: tuple[str, ...]) -> dict:
         "t2_anatomy": cfg.t2_anatomy,
         "gate": cfg.gate,
         "domain_incremental": str(cfg.t1_anatomy) != str(cfg.t2_anatomy),
+        "operator_shift": (
+            str(cfg.t1_mask_family) != str(cfg.t2_mask_family)
+            or int(cfg.t1_accel) != int(cfg.t2_accel)
+        ),
+        "claim_scope": (
+            "domain+operator composite drift (A+B stacked)"
+            if cfg.gate == "D"
+            else (
+                "domain-incremental (not same-knee accel-only)"
+                if cfg.gate == "A"
+                else (
+                    "same-knee mask-family (not Cartesian 4x->8x fallback)"
+                    if cfg.gate == "B"
+                    else "operator-incremental unsupervised MRI"
+                )
+            )
+        ),
         "device": cfg.device,
         "deepinv_version": getattr(dinv, "__version__", "unknown"),
         "deepinv_pinned": PINNED_DEEPINV,
