@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Gate E: Fine-tune-only, cross-IP continual. One try.
-# T1 MRI knee Gaussian Cartesian 4× → T2 deepinv Tomography (physics-tour 20-view 64×64).
+# T1 MRI knee Gaussian Cartesian 4× → T2 deepinv Tomography (physics-tour 40-view 64×64).
 # Unsupervised MC+EI (same as three-arm current-task loss). NOT SupLoss/HQ.
 # Do not start the three-arm grid from this script.
 set -euo pipefail
@@ -39,10 +39,10 @@ ELAPSED=$((END_EPOCH - START_EPOCH))
   echo "train_loss=MCLoss() + EILoss(Rotate(n_trans=4))"
   echo "physics_class_t1=deepinv.physics.MRI"
   echo "physics_class_t2=deepinv.physics.Tomography"
-  echo "ct_n_angles=20"
+  echo "ct_n_angles=40"
   echo "ct_img_size=64"
-  echo "ct_demo_source=deepinv==0.3.5 examples/physics/demo_physics_tour.py (Tomography, angles=20, img_width=64)"
-  echo "stream=T1 knee Gaussian Cartesian 4x -> T2 CT Tomography 20-view 64x64"
+  echo "ct_demo_source=deepinv.physics.Tomography physics-tour defaults: angles=40, img_width=64, normalize=True (int angles; not TomographyWithAstra)"
+  echo "stream=T1 knee Gaussian Cartesian 4x -> T2 CT Tomography 40-view 64x64"
   echo "fgt=after_T1.PSNR_T1 - after_T2.PSNR_T1 (T1 MRI test only)"
   echo "device=${DEVICE}"
   echo "arm=finetune"

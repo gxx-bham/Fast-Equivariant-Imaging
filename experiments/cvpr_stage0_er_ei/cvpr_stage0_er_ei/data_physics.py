@@ -261,13 +261,19 @@ def make_ct_physics(
     n_angles: int,
     device: torch.device,
 ) -> dinv.physics.Tomography:
-    """Copy deepinv 0.3.5 physics-tour sparse-view Tomography geometry."""
-    return dinv.physics.Tomography(
+    """Copy physics-tour sparse-view geometry: Tomography(angles=int, img_width)."""
+    physics = dinv.physics.Tomography(
         img_width=int(img_width),
         angles=int(n_angles),
         device=device,
         normalize=True,
     )
+    if type(physics).__name__ != "Tomography":
+        raise TypeError(
+            "CT physics MUST be deepinv.physics.Tomography "
+            f"(not TomographyWithAstra); got {type(physics).__name__}"
+        )
+    return physics
 
 
 class XYDataset(Dataset):
@@ -460,7 +466,7 @@ def simulate_ct_task(
     device: torch.device,
     name: str = "T2",
 ) -> TaskData:
-    """Sparse-view CT task. Geometry copied from deepinv 0.3.5 physics tour."""
+    """Sparse-view CT task. Geometry copied from deepinv physics-tour Tomography."""
     device = _resolve_device(device)
     x = as_modl_channels(x.to(device))
     x_train, x_eval = _split_train_eval(x, n_train, n_eval)

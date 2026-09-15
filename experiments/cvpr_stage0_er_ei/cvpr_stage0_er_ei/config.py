@@ -33,12 +33,15 @@ MASK_FAMILY_TO_CLASS = {
 # Fine-tune forgetting gate: Fgt must be clearly > 0 (T1 PSNR drop after T2).
 # 0.2 dB is above the ~0.18 opposite-direction wiggle on the failed Cartesian 4×→8× try.
 CLEAR_POSITIVE_FGT = 0.2
-# deepinv 0.3.5 examples/physics/demo_physics_tour.py — sparse Radon, 20 views, 64×64.
-CT_DEMO_N_ANGLES = 20
+# Physics-tour CT geometry. Class MUST be deepinv.physics.Tomography
+# (not TomographyWithAstra). Pass angles as int; Tomography samples uniformly.
+# Current tour default is 40 views @ 64×64, normalize=True. Pinned wheel
+# deepinv==0.3.5 tagged demo_physics_tour.py used angles=20; Gap Scout froze 40.
+CT_DEMO_N_ANGLES = 40
 CT_DEMO_IMG_SIZE = 64
 CT_DEMO_SOURCE = (
-    "deepinv==0.3.5 examples/physics/demo_physics_tour.py "
-    "(Tomography, angles=20, img_width=64)"
+    "deepinv.physics.Tomography physics-tour defaults: angles=40, img_width=64, "
+    "normalize=True (int angles; not TomographyWithAstra)"
 )
 CSV_COLUMNS = ("arm", "N_buf", "seed", "PSNR_T1", "PSNR_T2", "Avg", "Fgt")
 PINNED_DEEPINV = "0.3.5"

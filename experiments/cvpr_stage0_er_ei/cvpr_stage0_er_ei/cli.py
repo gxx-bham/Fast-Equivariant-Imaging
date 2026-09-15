@@ -123,7 +123,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         "--cross-ip",
         action="store_true",
         default=False,
-        help="T2 is deepinv Tomography CT (physics-tour 20-view 64×64). Unsupervised MC/EI.",
+        help="T2 is deepinv Tomography CT (physics-tour 40-view 64×64). Unsupervised MC/EI.",
     )
     parser.add_argument("--out", type=str, default="")
     parser.add_argument("--no-download", action="store_true")

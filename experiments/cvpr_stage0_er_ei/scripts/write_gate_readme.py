@@ -45,6 +45,23 @@ def main(argv: list[str]) -> int:
         scope = "same-knee mask-family"
     heading = f"# stage-0b Fine-tune forgetting gate {gate_id} — {scope}"
     verdict = gate.get("verdict", "UNKNOWN")
+    t2_line = (
+        f"{schedule.get('t2_anatomy')} Tomography n_angles={payload.get('ct_n_angles', schedule.get('ct_n_angles'))} "
+        f"img={schedule.get('t2_img_size')} · `{payload.get('physics_class_t2') or schedule.get('physics_class_t2')}` · {schedule.get('epochs_t2')} epochs"
+        if gate_id == "E" or bool(cfg.get("cross_ip"))
+        else (
+            f"{schedule.get('t2_anatomy')} {schedule.get('t2_mask_family')} {schedule.get('t2_accel')}× · "
+            f"`{schedule.get('mask_generator_t2')}` · {schedule.get('epochs_t2')} epochs"
+        )
+    )
+    extra_rows = ""
+    if gate_id == "E" or bool(cfg.get("cross_ip")):
+        extra_rows = f"""| cross_ip | {payload.get("cross_ip", cfg.get("cross_ip"))} |
+| physics_class_t1 | `{payload.get("physics_class_t1") or schedule.get("physics_class_t1")}` |
+| physics_class_t2 | `{payload.get("physics_class_t2") or schedule.get("physics_class_t2")}` |
+| ct_n_angles | {payload.get("ct_n_angles", schedule.get("ct_n_angles"))} |
+| Fgt definition | {payload.get("fgt_definition") or payload.get("fgt_formula")} |
+"""
     body = f"""{heading}
 
 **{verdict}**. Fine-tune only. One schedule try. Do **not** start the three-arm grid from this file.
@@ -60,8 +77,8 @@ def main(argv: list[str]) -> int:
 | n_train / n_eval | {cfg.get("n_train")} / {cfg.get("n_eval")} (held-out) |
 | N_buf fill | {proof.get("n_distinct_ya")} distinct T1 (y,A); holds_t1_A={proof.get("holds_t1_A")} |
 | T1 | {schedule.get("t1_anatomy")} {schedule.get("t1_mask_family")} {schedule.get("t1_accel")}× · `{schedule.get("mask_generator_t1")}` · {schedule.get("epochs_t1")} epochs |
-| T2 | {schedule.get("t2_anatomy")} {schedule.get("t2_mask_family")} {schedule.get("t2_accel")}× · `{schedule.get("mask_generator_t2")}` · {schedule.get("epochs_t2")} epochs |
-| Fgt threshold | {gate.get("min_fgt")} (clearly positive = T1 PSNR drop) |
+| T2 | {t2_line} |
+{extra_rows}| Fgt threshold | {gate.get("min_fgt")} (clearly positive = T1 PSNR drop) |
 
 | | PSNR_T1 | PSNR_T2 | Fgt |
 | --- | ---: | ---: | ---: |
