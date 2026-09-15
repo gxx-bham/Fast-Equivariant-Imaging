@@ -1,0 +1,4 @@
+torch>=2.2
+torchvision
+deepinv>=0.3.5
+numpy
