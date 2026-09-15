@@ -8,5 +8,5 @@ Tiny seed=1 CPU stub (few iters) and demo-scale go/kill grid:
 - `stage0b_gate_B/` — Gate B same-knee T1 Gaussian 4× → T2 `RandomMaskGenerator` 8× (**FAIL**, Fgt=+0.081, not clearly > 0)
 - `stage0b_gate_A/` — Gate A **domain-incremental** knee → brain mini RSS (**FAIL**, Fgt=−1.085)
 - `stage0b_gate_D/` — Gate D **domain+operator composite** (knee Gaussian 4× → brain `RandomMaskGenerator` 8×) (**FAIL**, Fgt=+0.162, not clearly > 0.2). Last unsupervised Fgt gate.
-- `stage0b_gate_F_supervised/` — Step 3 supervised Fine-tune on stream D (HQ `SupLoss`, MC/EI off). No E, no three-arm.
+- `stage0b_gate_F_supervised/` — Step 3 supervised Fine-tune on stream D (HQ `SupLoss`, MC/EI off). **PASS**, Fgt=**+3.480 dB**. No E, no three-arm.
 
