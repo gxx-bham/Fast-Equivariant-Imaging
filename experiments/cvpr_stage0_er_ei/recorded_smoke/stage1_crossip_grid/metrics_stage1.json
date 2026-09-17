@@ -1,0 +1,173 @@
+{
+  "label": "cross-IP continual",
+  "stage": "stage-1",
+  "device": "cpu",
+  "seeds": [
+    1,
+    2,
+    3
+  ],
+  "epochs_t1": 80,
+  "epochs_t2": 160,
+  "tiny": false,
+  "supervised": false,
+  "unsupervised": true,
+  "cross_ip": true,
+  "physics_class_t1": "deepinv.physics.MRI",
+  "physics_class_t2": "deepinv.physics.Tomography",
+  "ct_n_angles": 40,
+  "arm_losses": {
+    "Fine-tune": "current: MCLoss() + EILoss(Rotate(n_trans=4)); no buffer replay",
+    "ER+MC": "current: MCLoss() + EILoss(Rotate(n_trans=4)); buffer: MCLoss only",
+    "ER+EI": "current: MCLoss() + EILoss(Rotate(n_trans=4)); buffer: MCLoss() + EILoss(Rotate(n_trans=4))"
+  },
+  "n_train": 8,
+  "n_eval": 2,
+  "N_buf_grid": [
+    1,
+    2,
+    4,
+    8
+  ],
+  "deepinv_version": "0.3.5",
+  "elapsed_sec": 18841.282348155975,
+  "fgt_formula": "after_T1.PSNR_T1 - after_T2.PSNR_T1",
+  "fgt_definition": "Fgt = after_T1.PSNR_T1 - after_T2.PSNR_T1 on the T1 MRI test set only; T2 CT PSNR is logged separately and is not used in Fgt. Lower Fgt is better. Avg is appendix only.",
+  "rows": [
+    {
+      "arm": "Fine-tune",
+      "N_buf": 1,
+      "seed": 1,
+      "PSNR_T1": 20.519540786743164,
+      "PSNR_T2": 25.525888442993164,
+      "Avg": 23.022714614868164,
+      "Fgt": 4.576142311096191,
+      "arm_loss": "current: MCLoss() + EILoss(Rotate(n_trans=4)); no buffer replay"
+    },
+    {
+      "arm": "ER+MC",
+      "N_buf": 1,
+      "seed": 1,
+      "PSNR_T1": 21.494176864624023,
+      "PSNR_T2": 24.960529327392578,
+      "Avg": 23.2273530960083,
+      "Fgt": 3.601506233215332,
+      "arm_loss": "current: MCLoss() + EILoss(Rotate(n_trans=4)); buffer: MCLoss only"
+    },
+    {
+      "arm": "ER+EI",
+      "N_buf": 1,
+      "seed": 1,
+      "PSNR_T1": 24.382307052612305,
+      "PSNR_T2": 22.54515552520752,
+      "Avg": 23.463731288909912,
+      "Fgt": 0.7133760452270508,
+      "arm_loss": "current: MCLoss() + EILoss(Rotate(n_trans=4)); buffer: MCLoss() + EILoss(Rotate(n_trans=4))"
+    }
+  ],
+  "aggregate_fgt": [
+    {
+      "arm": "ER+EI",
+      "N_buf": 1,
+      "n_seeds": 1,
+      "Fgt_mean": 0.7133760452270508,
+      "Fgt_std": 0.0,
+      "Fgt_sem": 0.0,
+      "Fgt_values": [
+        0.7133760452270508
+      ]
+    },
+    {
+      "arm": "ER+MC",
+      "N_buf": 1,
+      "n_seeds": 1,
+      "Fgt_mean": 3.601506233215332,
+      "Fgt_std": 0.0,
+      "Fgt_sem": 0.0,
+      "Fgt_values": [
+        3.601506233215332
+      ]
+    },
+    {
+      "arm": "Fine-tune",
+      "N_buf": 1,
+      "n_seeds": 1,
+      "Fgt_mean": 4.576142311096191,
+      "Fgt_std": 0.0,
+      "Fgt_sem": 0.0,
+      "Fgt_values": [
+        4.576142311096191
+      ]
+    }
+  ],
+  "appendix_avg": [
+    {
+      "arm": "ER+EI",
+      "N_buf": 1,
+      "n_seeds": 1,
+      "Avg_mean": 23.463731288909912,
+      "Avg_std": 0.0,
+      "Avg_values": [
+        23.463731288909912
+      ]
+    },
+    {
+      "arm": "ER+MC",
+      "N_buf": 1,
+      "n_seeds": 1,
+      "Avg_mean": 23.2273530960083,
+      "Avg_std": 0.0,
+      "Avg_values": [
+        23.2273530960083
+      ]
+    },
+    {
+      "arm": "Fine-tune",
+      "N_buf": 1,
+      "n_seeds": 1,
+      "Avg_mean": 23.022714614868164,
+      "Avg_std": 0.0,
+      "Avg_values": [
+        23.022714614868164
+      ]
+    }
+  ],
+  "failed_cells": [],
+  "go_kill": {
+    "verdict": "INCONCLUSIVE",
+    "reason": "Need all seeds {1,2,3} and N_buf {1,2,4,8} before a stage-1 go/kill call.",
+    "rule": "Go: \u22652/3 seeds where on a majority of N_buf points Fgt(ER+EI)<Fgt(ER+MC). Kill: EI not stably better than MC on Fgt.",
+    "per_seed": [
+      {
+        "seed": 1,
+        "n_points": 1,
+        "n_EI_better_than_MC": 1,
+        "majority": true,
+        "points": [
+          {
+            "N_buf": 1,
+            "Fgt_ER+EI": 0.7133760452270508,
+            "Fgt_ER+MC": 3.601506233215332,
+            "Fgt_Fine-tune": 4.576142311096191,
+            "ER+EI_better": true,
+            "delta_MC_minus_EI": 2.8881301879882812
+          }
+        ]
+      }
+    ],
+    "majority_seeds": [
+      1
+    ],
+    "n_majority_seeds": 1,
+    "seeds_observed": [
+      1
+    ],
+    "n_buf_observed": [
+      1
+    ],
+    "grid_complete": false,
+    "tiny": false,
+    "primary": "Fgt on T1 MRI test (after_T1.PSNR_T1 - after_T2.PSNR_T1)",
+    "secondary": "Avg is appendix only"
+  }
+}
