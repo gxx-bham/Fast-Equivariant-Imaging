@@ -14,6 +14,9 @@ LEARNING_RATE = 5e-4
 WEIGHT_DECAY = 1e-8
 CURRENT_REPLAY_MIX = (1, 1)  # current:replay sample counts
 N_BUF_GRID = (1, 4)
+# Stage-1 expansion of the frozen cross-IP matrix. Not 16. Stage-0 grid stays {1,4}.
+STAGE1_N_BUF_GRID = (1, 2, 4, 8)
+STAGE1_SEEDS = (1, 2, 3)
 ARMS = ("finetune", "er_mc", "er_ei")
 ARM_LABELS = {
     "finetune": "Fine-tune",

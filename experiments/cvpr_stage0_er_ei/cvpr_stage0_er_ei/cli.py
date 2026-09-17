@@ -19,13 +19,18 @@ from .config import (
     MASK_FAMILY_TO_CLASS,
     N_BUF_GRID,
     PINNED_DEEPINV,
+    STAGE1_N_BUF_GRID,
+    STAGE1_SEEDS,
     SmokeConfig,
 )
 from .data_physics import smoke_data_physics
 from .logging_utils import (
+    aggregate_avg_vs_nbuf,
+    aggregate_fgt_vs_nbuf,
     distinct_slot_proof,
     finetune_forgetting_gate,
     go_kill_readout,
+    stage1_go_kill,
     write_csv,
     write_json,
 )
@@ -45,14 +50,21 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     )
     parser.add_argument(
         "--unit",
-        choices=("data", "finetune", "er", "nbuf1", "nbuf4", "grid"),
+        choices=("data", "finetune", "er", "nbuf1", "nbuf4", "grid", "stage1"),
         default="nbuf1",
         help=(
             "Verifiable unit: (a) data, (b) finetune, (c) er, "
-            "nbuf1, nbuf4 (must honor N_buf=4), or N_buf {1,4} grid."
+            "nbuf1, nbuf4 (must honor N_buf=4), N_buf {1,4} grid, "
+            "or stage1 cross-IP N_buf {1,2,4,8} × seeds {1,2,3}."
         ),
     )
     parser.add_argument("--seed", type=int, default=1)
+    parser.add_argument(
+        "--seeds",
+        type=str,
+        default=None,
+        help="Comma-separated seeds for --unit stage1 (default 1,2,3).",
+    )
     parser.add_argument(
         "--n-buf",
         type=int,
@@ -158,6 +170,14 @@ def _resolve_n_buf(args: argparse.Namespace, n_buf: int | None = None) -> int:
         if int(n_buf) not in N_BUF_GRID:
             raise SystemExit(f"grid N_buf must be in {N_BUF_GRID} (got {n_buf})")
         return int(n_buf)
+    if args.unit == "stage1":
+        if n_buf is None:
+            raise SystemExit("stage1 cells must pass n_buf in {1, 2, 4, 8}")
+        if int(n_buf) not in STAGE1_N_BUF_GRID:
+            raise SystemExit(
+                f"stage1 N_buf must be in {STAGE1_N_BUF_GRID} (got {n_buf}); not 16."
+            )
+        return int(n_buf)
     if n_buf is not None:
         return int(n_buf)
     return int(args.n_buf if args.n_buf is not None else 1)
@@ -244,6 +264,7 @@ def _payload_config(cfg: SmokeConfig, arms: tuple[str, ...]) -> dict:
             )
         ),
         "supervised": bool(cfg.supervised),
+        "unsupervised": not bool(cfg.supervised),
         "cross_ip": bool(cfg.cross_ip),
         "physics_class_t1": "deepinv.physics.MRI",
         "physics_class_t2": (
@@ -314,6 +335,10 @@ def _run_arms(cfg: SmokeConfig, arms: tuple[str, ...]) -> dict:
         rows.append(result["row"])
         details.append(result)
         print(json.dumps(result["row"], indent=2))
+        if result.get("replay"):
+            print("replay:", json.dumps(result["replay"], indent=2))
+        if result.get("reviewer_check"):
+            print("reviewer_check:", json.dumps(result["reviewer_check"], indent=2))
         print(
             "buffer:",
             json.dumps(
@@ -344,6 +369,7 @@ def _run_arms(cfg: SmokeConfig, arms: tuple[str, ...]) -> dict:
         "elapsed_sec": elapsed_sec,
         "device": details[0]["device"] if details else cfg.device,
         "supervised": bool(cfg.supervised),
+        "unsupervised": not bool(cfg.supervised),
         "cross_ip": bool(cfg.cross_ip),
         "n_distinct_ya": (
             int(details[0]["buffer"]["n_distinct_ya"]) if details else None
@@ -487,6 +513,115 @@ def main(argv: list[str] | None = None) -> int:
         )
         print("grid go/kill:", json.dumps(go_kill, indent=2))
         print(f"device={cfg0.device} elapsed_sec={elapsed_sec:.1f}")
+        return 0
+
+    if args.unit == "stage1":
+        if not args.cross_ip:
+            raise SystemExit("stage-1 is cross-IP stream E; pass --cross-ip")
+        if args.supervised:
+            raise SystemExit("stage-1 must stay unsupervised (no --supervised)")
+        if args.n_buf is not None:
+            raise SystemExit(
+                "--unit stage1 always runs N_buf in {1,2,4,8}; do not pass --n-buf"
+            )
+        if int(args.n_train) < max(STAGE1_N_BUF_GRID):
+            raise SystemExit(
+                f"stage-1 N_buf=8 needs --n-train >= {max(STAGE1_N_BUF_GRID)} "
+                f"(got {args.n_train})"
+            )
+        seeds = tuple(
+            int(s) for s in (args.seeds or "1,2,3").split(",") if s.strip()
+        )
+        if any(s not in STAGE1_SEEDS for s in seeds):
+            raise SystemExit(f"stage-1 seeds must be in {STAGE1_SEEDS} (got {seeds})")
+        arms = tuple(a.strip() for a in args.arms.split(",") if a.strip()) or ARMS
+        grid_dir = Path(
+            args.out or (_package_root() / "recorded_smoke" / "stage1_crossip_grid")
+        )
+        grid_dir.mkdir(parents=True, exist_ok=True)
+        all_rows: list[dict] = []
+        cell_payloads: list[dict] = []
+        failed: list[dict] = []
+        t0 = time.time()
+
+        def _dump_stage1() -> dict:
+            cfg0 = _cfg_from_args(args, n_buf=int(STAGE1_N_BUF_GRID[0]))
+            elapsed = time.time() - t0
+            go_kill = stage1_go_kill(
+                all_rows,
+                tiny=cfg0.tiny,
+                required_seeds=STAGE1_SEEDS,
+                required_nbufs=STAGE1_N_BUF_GRID,
+            )
+            payload = {
+                "label": "cross-IP continual",
+                "stage": "stage-1",
+                "device": cfg0.device,
+                "seeds": list(seeds),
+                "epochs_t1": cfg0.t1_epochs(),
+                "epochs_t2": cfg0.t2_epochs(),
+                "tiny": cfg0.tiny,
+                "supervised": False,
+                "unsupervised": True,
+                "cross_ip": True,
+                "physics_class_t1": "deepinv.physics.MRI",
+                "physics_class_t2": "deepinv.physics.Tomography",
+                "ct_n_angles": 40,
+                "arm_losses": _payload_config(cfg0, ARMS)["arm_losses"],
+                "n_train": cfg0.n_train,
+                "n_eval": cfg0.n_eval,
+                "N_buf_grid": list(STAGE1_N_BUF_GRID),
+                "deepinv_version": getattr(dinv, "__version__", "unknown"),
+                "elapsed_sec": elapsed,
+                "fgt_formula": "after_T1.PSNR_T1 - after_T2.PSNR_T1",
+                "fgt_definition": (
+                    "Fgt = after_T1.PSNR_T1 - after_T2.PSNR_T1 on the T1 MRI test set only; "
+                    "T2 CT PSNR is logged separately and is not used in Fgt. "
+                    "Lower Fgt is better. Avg is appendix only."
+                ),
+                "rows": all_rows,
+                "aggregate_fgt": aggregate_fgt_vs_nbuf(all_rows),
+                "appendix_avg": aggregate_avg_vs_nbuf(all_rows),
+                "failed_cells": failed,
+                "go_kill": go_kill,
+            }
+            write_csv(grid_dir / "metrics_stage1.csv", all_rows)
+            write_json(grid_dir / "metrics_stage1.json", payload)
+            return payload
+
+        for seed in seeds:
+            args.seed = int(seed)
+            for n_buf in STAGE1_N_BUF_GRID:
+                cell_dir = grid_dir / f"seed{seed}" / f"nbuf{n_buf}"
+                json_path = cell_dir / f"metrics_nbuf{n_buf}_seed{seed}.json"
+                if json_path.is_file():
+                    existing = json.loads(json_path.read_text())
+                    all_rows.extend(existing.get("rows", []))
+                    cell_payloads.append(existing)
+                    print(f"skip existing {json_path}")
+                    _dump_stage1()
+                    continue
+                cfg = _cfg_from_args(args, n_buf=int(n_buf))
+                cfg.out_dir = str(cell_dir)
+                try:
+                    cell = _run_arms(cfg, arms)
+                    all_rows.extend(cell["rows"])
+                    cell_payloads.append(cell)
+                except Exception as exc:  # noqa: BLE001 — keep remaining cells
+                    rec = {
+                        "seed": int(seed),
+                        "N_buf": int(n_buf),
+                        "error": f"{type(exc).__name__}: {exc}",
+                    }
+                    failed.append(rec)
+                    print(f"CELL FAILED seed={seed} N_buf={n_buf}: {rec['error']}")
+                _dump_stage1()
+
+        payload = _dump_stage1()
+        print("stage1 go/kill:", json.dumps(payload["go_kill"], indent=2))
+        print("aggregate_fgt:", json.dumps(payload["aggregate_fgt"], indent=2))
+        print(f"failed_cells={failed}")
+        print(f"device={payload['device']} elapsed_sec={payload['elapsed_sec']:.1f}")
         return 0
 
     raise RuntimeError(f"unhandled unit {args.unit}")

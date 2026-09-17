@@ -224,3 +224,164 @@ def finetune_forgetting_gate(
             "(need a clear T1 PSNR drop after T2)."
         ),
     }
+
+
+def aggregate_fgt_vs_nbuf(rows: Sequence[Mapping[str, Any]]) -> list[dict[str, Any]]:
+    """Mean ± std / sem of Fgt across seeds for each (arm, N_buf)."""
+    groups: dict[tuple[str, int], list[float]] = {}
+    for row in rows:
+        key = (str(row["arm"]), int(row["N_buf"]))
+        groups.setdefault(key, []).append(float(row["Fgt"]))
+    out: list[dict[str, Any]] = []
+    for arm, n_buf in sorted(groups, key=lambda k: (k[1], k[0])):
+        vals = groups[(arm, n_buf)]
+        n = len(vals)
+        mean = sum(vals) / n
+        var = sum((v - mean) ** 2 for v in vals) / (n - 1) if n > 1 else 0.0
+        std = var**0.5
+        sem = std / (n**0.5) if n else 0.0
+        out.append(
+            {
+                "arm": arm,
+                "N_buf": n_buf,
+                "n_seeds": n,
+                "Fgt_mean": mean,
+                "Fgt_std": std,
+                "Fgt_sem": sem,
+                "Fgt_values": vals,
+            }
+        )
+    return out
+
+
+def aggregate_avg_vs_nbuf(rows: Sequence[Mapping[str, Any]]) -> list[dict[str, Any]]:
+    """Appendix only: mean ± std of Avg across seeds."""
+    groups: dict[tuple[str, int], list[float]] = {}
+    for row in rows:
+        key = (str(row["arm"]), int(row["N_buf"]))
+        groups.setdefault(key, []).append(float(row["Avg"]))
+    out: list[dict[str, Any]] = []
+    for arm, n_buf in sorted(groups, key=lambda k: (k[1], k[0])):
+        vals = groups[(arm, n_buf)]
+        n = len(vals)
+        mean = sum(vals) / n
+        var = sum((v - mean) ** 2 for v in vals) / (n - 1) if n > 1 else 0.0
+        std = var**0.5
+        out.append(
+            {
+                "arm": arm,
+                "N_buf": n_buf,
+                "n_seeds": n,
+                "Avg_mean": mean,
+                "Avg_std": std,
+                "Avg_values": vals,
+            }
+        )
+    return out
+
+
+def stage1_go_kill(
+    rows: Iterable[Mapping[str, Any]],
+    *,
+    tiny: bool = False,
+    required_seeds: Sequence[int] = (1, 2, 3),
+    required_nbufs: Sequence[int] = (1, 2, 4, 8),
+) -> dict[str, Any]:
+    """Stage-1 go/kill on Fgt (lower is better).
+
+    Go: ≥2/3 seeds where on a majority of N_buf points Fgt(ER+EI) < Fgt(ER+MC).
+    Kill: after multi-seed, EI not stably better than MC on Fgt.
+    """
+    required_seeds = tuple(int(s) for s in required_seeds)
+    required_nbufs = tuple(int(n) for n in required_nbufs)
+    by_key: dict[tuple[str, int, int], float] = {}
+    seeds: set[int] = set()
+    nbufs: set[int] = set()
+    for row in rows:
+        arm = str(row["arm"])
+        n_buf = int(row["N_buf"])
+        seed = int(row["seed"])
+        seeds.add(seed)
+        nbufs.add(n_buf)
+        by_key[(arm, n_buf, seed)] = float(row["Fgt"])
+
+    per_seed: list[dict[str, Any]] = []
+    majority_seeds: list[int] = []
+    for seed in sorted(seeds):
+        points = []
+        n_better = 0
+        for n_buf in sorted(nbufs):
+            ei = by_key.get(("ER+EI", n_buf, seed))
+            mc = by_key.get(("ER+MC", n_buf, seed))
+            if ei is None or mc is None:
+                continue
+            better = ei < mc
+            points.append(
+                {
+                    "N_buf": n_buf,
+                    "Fgt_ER+EI": ei,
+                    "Fgt_ER+MC": mc,
+                    "Fgt_Fine-tune": by_key.get(("Fine-tune", n_buf, seed)),
+                    "ER+EI_better": better,
+                    "delta_MC_minus_EI": mc - ei,
+                }
+            )
+            if better:
+                n_better += 1
+        n_points = len(points)
+        majority = n_points > 0 and n_better > (n_points / 2.0)
+        if majority:
+            majority_seeds.append(seed)
+        per_seed.append(
+            {
+                "seed": seed,
+                "n_points": n_points,
+                "n_EI_better_than_MC": n_better,
+                "majority": majority,
+                "points": points,
+            }
+        )
+
+    complete = set(seeds) >= set(required_seeds) and set(nbufs) >= set(required_nbufs)
+    n_majority = len(majority_seeds)
+    verdict = "INCONCLUSIVE"
+    reason = "Need all seeds {1,2,3} and N_buf {1,2,4,8} before a stage-1 go/kill call."
+    if complete:
+        if n_majority >= 2:
+            verdict = "GO"
+            reason = (
+                f"{n_majority}/3 seeds have Fgt(ER+EI)<Fgt(ER+MC) on a majority "
+                f"of N_buf points (seeds {majority_seeds})."
+            )
+        else:
+            verdict = "KILL"
+            reason = (
+                f"After multi-seed, ER+EI is not stably better than ER+MC on Fgt "
+                f"({n_majority}/3 seeds with a majority of N points; need ≥2/3)."
+            )
+
+    result = {
+        "verdict": verdict,
+        "reason": reason,
+        "rule": (
+            "Go: ≥2/3 seeds where on a majority of N_buf points "
+            "Fgt(ER+EI)<Fgt(ER+MC). Kill: EI not stably better than MC on Fgt."
+        ),
+        "per_seed": per_seed,
+        "majority_seeds": majority_seeds,
+        "n_majority_seeds": n_majority,
+        "seeds_observed": sorted(seeds),
+        "n_buf_observed": sorted(nbufs),
+        "grid_complete": complete,
+        "tiny": bool(tiny),
+        "primary": "Fgt on T1 MRI test (after_T1.PSNR_T1 - after_T2.PSNR_T1)",
+        "secondary": "Avg is appendix only",
+    }
+    if tiny:
+        result["would_have_been"] = result["verdict"]
+        result["verdict"] = "INCONCLUSIVE"
+        result["reason"] = (
+            "Tiny stub is a pipeline check, not a stage-1 go/kill decision. "
+            + result["reason"]
+        )
+    return result

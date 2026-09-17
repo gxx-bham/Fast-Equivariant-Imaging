@@ -62,6 +62,25 @@ def _corner_crops(x: torch.Tensor, size: int) -> torch.Tensor:
     return torch.cat(crops, dim=0)
 
 
+def _spatial_crops(x: torch.Tensor, size: int) -> torch.Tensor:
+    """3×3 windows of `size` on a larger native slice (still 128 recon).
+
+    Corner crops yield at most 8 tiles from 2 native 320 slices. Stage-1 N_buf=8
+    plus held-out eval needs 10, so include the center window as well.
+    """
+    _n, _c, h, w = x.shape
+    if h == size and w == size:
+        return x
+    if h < size or w < size:
+        return torch.nn.functional.interpolate(
+            x, size=(size, size), mode="bilinear", align_corners=False
+        )
+    ys = sorted({0, max(0, (h - size) // 2), max(0, h - size)})
+    xs = sorted({0, max(0, (w - size) // 2), max(0, w - size)})
+    crops = [x[:, :, y0 : y0 + size, x0 : x0 + size] for y0 in ys for x0 in xs]
+    return torch.cat(crops, dim=0)
+
+
 def load_anatomy_slices(
     anatomy: str = "knee",
     img_size: int = 128,
@@ -72,8 +91,9 @@ def load_anatomy_slices(
     """Load the deepinv mini FastMRI subset for one anatomy (knee or brain RSS).
 
     n_total <= 2: resize both demo slices to img_size (tiny path).
-    n_total > 2: 128×128 corner crops from native 320×320 (up to 8 slices)
-    so N_buf=4 can store 4 distinct (y, A). Recon stays 128×128.
+    2 < n_total <= 8: 128×128 corner crops from native 320×320 (up to 8 slices).
+    n_total > 8: 3×3 128 windows (up to 18) so N_buf=8 plus held-out eval fit.
+    Recon stays 128×128. Not a 320² architecture change.
     """
     anatomy = str(anatomy).lower()
     if anatomy not in ("knee", "brain"):
@@ -100,7 +120,11 @@ def load_anatomy_slices(
             transform=None,
             download=download,
         )
-        x = _corner_crops(_stack_images(dataset), img_size)[:n_total]
+        x = _stack_images(dataset)
+        if n_total > 8:
+            x = _spatial_crops(x, img_size)[:n_total]
+        else:
+            x = _corner_crops(x, img_size)[:n_total]
     if x.ndim != 4 or x.shape[1] != 2:
         raise RuntimeError(
             f"Expected stacked complex MRI images (N, 2, H, W); got {tuple(x.shape)}"

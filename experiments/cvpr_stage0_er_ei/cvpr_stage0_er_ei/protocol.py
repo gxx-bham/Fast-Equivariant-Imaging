@@ -19,7 +19,7 @@ from .data_physics import (
     task_operator_report,
 )
 from .logging_utils import summary_row
-from .losses import current_task_losses, losses_for_arm, supervised_losses
+from .losses import BufferReplayLoss, current_task_losses, losses_for_arm, supervised_losses
 from .train_eval import eval_psnr, make_modl, set_seed, train_task
 
 
@@ -116,11 +116,7 @@ def run_arm(arm: str, cfg: SmokeConfig, out_dir: Path | None = None) -> dict[str
     )
     buffer.fill_from_dataset(tasks["T1"].train, task="T1", accel=tasks["T1"].accel)
     buffer_report = buffer.summary()
-    if (
-        not cfg.tiny
-        and cfg.n_buf >= 4
-        and buffer_report["n_distinct_ya"] < cfg.n_buf
-    ):
+    if not cfg.tiny and buffer_report["n_distinct_ya"] < cfg.n_buf:
         raise RuntimeError(
             f"N_buf={cfg.n_buf} but buffer has only {buffer_report['n_distinct_ya']} "
             "distinct (y, A) slots. Increase --n-train so the buffer can hold "
@@ -131,6 +127,25 @@ def run_arm(arm: str, cfg: SmokeConfig, out_dir: Path | None = None) -> dict[str
         t2_losses = supervised_losses()
     else:
         t2_losses = losses_for_arm(arm, buffer=None if arm == "finetune" else buffer)
+    replay_mod = next((loss for loss in t2_losses if isinstance(loss, BufferReplayLoss)), None)
+    if replay_mod is not None:
+        y0 = tasks["T2"].train.y[:1].to(device)
+        replay_mod(
+            x_net=None,
+            physics=tasks["T2"].physics.to(device)
+            if hasattr(tasks["T2"].physics, "to")
+            else tasks["T2"].physics,
+            model=model,
+            y=y0,
+        )
+        print(
+            "pre_T2_replay "
+            f"BufferReplayLoss={replay_mod.first_loss:.8e} "
+            f"physics={replay_mod.last_replay_physics} "
+            f"y_b_shape={replay_mod.last_y_shape} "
+            f"mask_shape={replay_mod.last_mask_shape} "
+            "via make_mri_physics"
+        )
     train_task(
         model,
         tasks["T2"],
@@ -142,6 +157,8 @@ def run_arm(arm: str, cfg: SmokeConfig, out_dir: Path | None = None) -> dict[str
     )
     psnr_t1_after_t2 = eval_psnr(model, tasks["T1"], device, batch_size=cfg.batch_size)
     psnr_t2_after_t2 = eval_psnr(model, tasks["T2"], device, batch_size=cfg.batch_size)
+    replay_stats = None if replay_mod is None else replay_mod.stats()
+    fgt_expected = float(psnr_t1_after_t1) - float(psnr_t1_after_t2)
 
     row = summary_row(
         arm=arm,
@@ -224,6 +241,47 @@ def run_arm(arm: str, cfg: SmokeConfig, out_dir: Path | None = None) -> dict[str
             if cfg.supervised
             else ARM_LOSSES[arm]
         ),
+        "unsupervised": not bool(cfg.supervised),
+        "replay": replay_stats,
+        "fgt_handcheck": {
+            "formula": "after_T1.PSNR_T1 - after_T2.PSNR_T1",
+            "expected": fgt_expected,
+            "logged": float(row["Fgt"]),
+            "ok": abs(fgt_expected - float(row["Fgt"])) < 1e-5,
+        },
+        "reviewer_check": {
+            "source": "operators/schedule (not stale config.t2_*)",
+            "cross_ip": bool(cfg.cross_ip),
+            "unsupervised": not bool(cfg.supervised),
+            "physics_class_t1": tasks["T1"].physics_class,
+            "physics_class_t2": tasks["T2"].physics_class,
+            "ct_n_angles": tasks["T2"].n_angles,
+            "t2_is_tomography": tasks["T2"].physics_class == "deepinv.physics.Tomography",
+            "n_angles_40": tasks["T2"].n_angles == 40,
+            "fgt_handcheck_ok": abs(fgt_expected - float(row["Fgt"])) < 1e-5,
+            "replay_rebuilds_mri": (
+                True
+                if replay_stats is None
+                else bool(replay_stats.get("rebuilds_mri_from_stored_mask"))
+            ),
+            "BufferReplayLoss_logged": replay_stats,
+            "pass": (
+                bool(cfg.cross_ip)
+                and not bool(cfg.supervised)
+                and tasks["T2"].physics_class == "deepinv.physics.Tomography"
+                and tasks["T2"].n_angles == 40
+                and abs(fgt_expected - float(row["Fgt"])) < 1e-5
+                and (
+                    replay_stats is None
+                    or (
+                        bool(replay_stats.get("rebuilds_mri_from_stored_mask"))
+                        and bool(replay_stats.get("BufferReplayLoss_nonzero"))
+                        and replay_stats.get("replay_physics_class")
+                        == "deepinv.physics.MRI"
+                    )
+                )
+            ),
+        },
         "domain_incremental": str(tasks["T1"].anatomy) != str(tasks["T2"].anatomy),
         "mask_family_to_class": dict(MASK_FAMILY_TO_CLASS),
     }
