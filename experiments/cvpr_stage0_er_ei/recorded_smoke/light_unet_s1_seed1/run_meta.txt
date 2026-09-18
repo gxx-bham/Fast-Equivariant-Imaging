@@ -1,0 +1,28 @@
+label=light-UNet single-seed direction smoke
+backbone=deepinv.models.UNet
+backbone_ctor_kwargs=in_channels=2,out_channels=2,residual=True,circular_padding=False,cat=True,bias=True,batch_norm=True,scales=3
+wrapper=deepinv.models.ArtifactRemoval
+wrapper_ctor_kwargs=mode=adjoint
+supervised=false
+unsupervised=true
+cross_ip=true
+physics_class_t1=deepinv.physics.MRI
+physics_class_t2=deepinv.physics.Tomography
+ct_n_angles=40
+n_buf=1
+seed=1
+arms=finetune,er_mc,er_ei
+ei=EILoss(Rotate(n_trans=4))
+stream=T1 knee Gaussian Cartesian 4x -> T2 CT Tomography 40-view 64x64
+fgt=after_T1.PSNR_T1 - after_T2.PSNR_T1 (T1 MRI test only; lower is better)
+direction_only=true
+formal_stage1_go_kill=false
+device=cpu
+n_train=8
+n_eval=2
+epochs_t1=80
+epochs_t2=160
+tiny=false
+start_utc=2026-09-18T12:14:17Z
+end_utc=2026-09-18T12:46:10Z
+elapsed_sec=1913
