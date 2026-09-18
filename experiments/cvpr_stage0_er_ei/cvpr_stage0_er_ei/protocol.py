@@ -20,7 +20,13 @@ from .data_physics import (
 )
 from .logging_utils import summary_row
 from .losses import BufferReplayLoss, current_task_losses, losses_for_arm, supervised_losses
-from .train_eval import eval_psnr, make_modl, set_seed, train_task
+from .train_eval import (
+    backbone_fingerprint,
+    eval_psnr,
+    make_backbone,
+    set_seed,
+    train_task,
+)
 
 
 def _device(cfg: SmokeConfig) -> torch.device:
@@ -94,7 +100,8 @@ def run_arm(arm: str, cfg: SmokeConfig, out_dir: Path | None = None) -> dict[str
             t2_anatomy=cfg.t2_anatomy,
             x_t2=x_t2,
         )
-    model = make_modl(device)
+    model = make_backbone(cfg, device)
+    backbone_fp = backbone_fingerprint(cfg, model)
     save_path = None if out_dir is None else str(out_dir / "ckpts" / arm)
 
     t1_losses = supervised_losses() if cfg.supervised else current_task_losses()
@@ -243,6 +250,7 @@ def run_arm(arm: str, cfg: SmokeConfig, out_dir: Path | None = None) -> dict[str
         ),
         "unsupervised": not bool(cfg.supervised),
         "replay": replay_stats,
+        "backbone": backbone_fp,
         "fgt_handcheck": {
             "formula": "after_T1.PSNR_T1 - after_T2.PSNR_T1",
             "expected": fgt_expected,
@@ -265,6 +273,10 @@ def run_arm(arm: str, cfg: SmokeConfig, out_dir: Path | None = None) -> dict[str
                 else bool(replay_stats.get("rebuilds_mri_from_stored_mask"))
             ),
             "BufferReplayLoss_logged": replay_stats,
+            "backbone_class": backbone_fp["class"],
+            "backbone_ctor_kwargs": backbone_fp["ctor_kwargs"],
+            "backbone_wrapper_class": backbone_fp["wrapper_class"],
+            "backbone_wrapper_ctor_kwargs": backbone_fp["wrapper_ctor_kwargs"],
             "pass": (
                 bool(cfg.cross_ip)
                 and not bool(cfg.supervised)

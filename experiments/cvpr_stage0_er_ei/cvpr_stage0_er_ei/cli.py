@@ -13,6 +13,8 @@ import deepinv as dinv
 from .config import (
     ARM_LOSSES,
     ARMS,
+    BACKBONE_MODL,
+    BACKBONES,
     CT_DEMO_IMG_SIZE,
     CT_DEMO_N_ANGLES,
     CT_DEMO_SOURCE,
@@ -35,6 +37,7 @@ from .logging_utils import (
     write_json,
 )
 from .protocol import run_arm
+from .train_eval import backbone_fingerprint
 
 
 def _package_root() -> Path:
@@ -45,7 +48,8 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=(
             "CVPR stage-0 operator-incremental unsupervised MRI smoke. "
-            "Composes deepinv (MoDL + MCLoss/EILoss), not FEI/SkEI plugins."
+            "Composes deepinv (MoDL or UNet+ArtifactRemoval + MCLoss/EILoss), "
+            "not FEI/SkEI plugins."
         )
     )
     parser.add_argument(
@@ -138,6 +142,16 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         default=False,
         help="T2 is deepinv Tomography CT (physics-tour 40-view 64×64). Unsupervised MC/EI.",
     )
+    parser.add_argument(
+        "--backbone",
+        choices=BACKBONES,
+        default=BACKBONE_MODL,
+        help=(
+            "Reconstructor: modl = deepinv.models.MoDL() (default, existing gates/"
+            "stage-1). unet = UNet(scales=3) wrapped by ArtifactRemoval(mode=adjoint). "
+            "Do not pass unet into --unit stage1 MoDL logs."
+        ),
+    )
     parser.add_argument("--out", type=str, default="")
     parser.add_argument("--no-download", action="store_true")
     return parser.parse_args(argv)
@@ -209,6 +223,7 @@ def _cfg_from_args(args: argparse.Namespace, n_buf: int | None = None) -> SmokeC
         gate=args.gate or "",
         supervised=bool(args.supervised),
         cross_ip=bool(args.cross_ip),
+        backbone=str(args.backbone),
         ct_n_angles=CT_DEMO_N_ANGLES,
         ct_img_size=CT_DEMO_IMG_SIZE,
         download=not args.no_download,
@@ -276,7 +291,7 @@ def _payload_config(cfg: SmokeConfig, arms: tuple[str, ...]) -> dict:
         "device": cfg.device,
         "deepinv_version": getattr(dinv, "__version__", "unknown"),
         "deepinv_pinned": PINNED_DEEPINV,
-        "backbone": "deepinv.models.MoDL",
+        "backbone": backbone_fingerprint(cfg),
         "losses_current": (
             "deepinv.loss.SupLoss (HQ MSE; MC/EI off)"
             if cfg.supervised
@@ -324,6 +339,7 @@ def _run_arms(cfg: SmokeConfig, arms: tuple[str, ...]) -> dict:
             f"\n=== arm={arm} N_buf={cfg.n_buf} seed={cfg.seed} "
             f"device={cfg.device} tiny={cfg.tiny} n_train={cfg.n_train} "
             f"gate={cfg.gate or '-'} supervised={cfg.supervised} cross_ip={cfg.cross_ip} "
+            f"backbone={cfg.backbone} "
             f"T1={cfg.t1_anatomy}/{cfg.t1_mask_family}/{cfg.t1_accel}x "
             f"T2={'ct/Tomography/' + str(cfg.ct_n_angles) if cfg.cross_ip else cfg.t2_anatomy + '/' + cfg.t2_mask_family + '/' + str(cfg.t2_accel) + 'x'} ==="
         )
@@ -375,6 +391,7 @@ def _run_arms(cfg: SmokeConfig, arms: tuple[str, ...]) -> dict:
             int(details[0]["buffer"]["n_distinct_ya"]) if details else None
         ),
         "distinct_slot_proof": proofs[0] if len(proofs) == 1 else proofs,
+        "backbone": backbone_fingerprint(cfg),
         "fgt_formula": "after_T1.PSNR_T1 - after_T2.PSNR_T1",
         "fgt_definition": (
             "Fgt = after_T1.PSNR_T1 - after_T2.PSNR_T1 on the T1 MRI test set only; "
@@ -516,6 +533,11 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     if args.unit == "stage1":
+        if str(args.backbone) != BACKBONE_MODL:
+            raise SystemExit(
+                "stage-1 MoDL matrix is frozen; do not pass --backbone unet. "
+                "Light-UNet smoke uses --unit nbuf1 --backbone unet and a separate out dir."
+            )
         if not args.cross_ip:
             raise SystemExit("stage-1 is cross-IP stream E; pass --cross-ip")
         if args.supervised:

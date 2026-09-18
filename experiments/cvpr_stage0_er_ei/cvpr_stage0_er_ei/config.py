@@ -61,6 +61,24 @@ CT_DEMO_SOURCE = (
 )
 CSV_COLUMNS = ("arm", "N_buf", "seed", "PSNR_T1", "PSNR_T2", "Avg", "Fgt")
 PINNED_DEEPINV = "0.3.5"
+# Switchable reconstructor. Default stays MoDL (existing gates/stage-1).
+# Light smoke: deepinv.models.UNet(scales=3) wrapped by ArtifactRemoval.
+BACKBONE_MODL = "modl"
+BACKBONE_UNET = "unet"
+BACKBONES = (BACKBONE_MODL, BACKBONE_UNET)
+# Stream E MRI/CT tensors are 2-channel (real/imag; CT stacked via as_modl_channels).
+# Library UNet default is scales=4, in_channels=1; frozen light smoke is scales=3.
+UNET_CTOR_KWARGS = {
+    "in_channels": 2,
+    "out_channels": 2,
+    "residual": True,
+    "circular_padding": False,
+    "cat": True,
+    "bias": True,
+    "batch_norm": True,
+    "scales": 3,
+}
+ARTIFACT_REMOVAL_CTOR_KWARGS = {"mode": "adjoint"}
 
 
 @dataclass
@@ -87,6 +105,7 @@ class SmokeConfig:
     gate: str = ""  # B/A/D/F/E
     supervised: bool = False  # True: HQ SupLoss only (MC/EI off) for this gate
     cross_ip: bool = False  # Gate E: T1 MRI → T2 CT Tomography
+    backbone: str = BACKBONE_MODL  # "modl" or "unet" (UNet scales=3 + ArtifactRemoval)
     ct_n_angles: int = CT_DEMO_N_ANGLES
     ct_img_size: int = CT_DEMO_IMG_SIZE
     learning_rate: float = LEARNING_RATE

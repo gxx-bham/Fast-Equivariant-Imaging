@@ -10,9 +10,17 @@ import torch
 from torch.utils.data import DataLoader
 
 import deepinv as dinv
-from deepinv.models import MoDL
+from deepinv.models import ArtifactRemoval, MoDL, UNet
 
-from .config import LEARNING_RATE, WEIGHT_DECAY, SmokeConfig
+from .config import (
+    ARTIFACT_REMOVAL_CTOR_KWARGS,
+    BACKBONE_MODL,
+    BACKBONE_UNET,
+    LEARNING_RATE,
+    UNET_CTOR_KWARGS,
+    WEIGHT_DECAY,
+    SmokeConfig,
+)
 from .data_physics import TaskData, XYDataset, make_mri_physics
 
 
@@ -25,6 +33,68 @@ def set_seed(seed: int) -> None:
 def make_modl(device: torch.device) -> MoDL:
     """Locked backbone: deepinv.models.MoDL with library defaults."""
     return MoDL().to(device)
+
+
+def make_unet_reconstructor(device: torch.device) -> ArtifactRemoval:
+    """Light backbone: UNet(scales=3) wrapped as a (y, physics) reconstructor.
+
+    UNet is a Denoiser (forward(x, sigma)); ArtifactRemoval(mode=adjoint) maps
+    measurements through A^T then the UNet. in_channels=2 matches stream-E
+    MRI real/imag and CT stacked via as_modl_channels. Frozen: scales=3,
+    EILoss Rotate n_trans=4 is not swept here.
+    """
+    denoiser = UNet(**dict(UNET_CTOR_KWARGS))
+    return ArtifactRemoval(denoiser, **dict(ARTIFACT_REMOVAL_CTOR_KWARGS)).to(device)
+
+
+def make_backbone(cfg: SmokeConfig, device: torch.device) -> torch.nn.Module:
+    kind = str(getattr(cfg, "backbone", BACKBONE_MODL)).lower()
+    if kind in (BACKBONE_MODL, "deepinv.models.modl", "deepinv.models.MoDL".lower()):
+        return make_modl(device)
+    if kind in (BACKBONE_UNET, "light", "deepinv.models.unet"):
+        return make_unet_reconstructor(device)
+    raise ValueError(
+        f"unknown backbone {cfg.backbone!r}; expected {BACKBONE_MODL!r} or {BACKBONE_UNET!r}"
+    )
+
+
+def backbone_fingerprint(
+    cfg: SmokeConfig, model: torch.nn.Module | None = None
+) -> dict:
+    """Exact class names + ctor kwargs for reviewer JSON (not a stale string)."""
+    kind = str(getattr(cfg, "backbone", BACKBONE_MODL)).lower()
+    if kind in (BACKBONE_UNET, "light", "deepinv.models.unet"):
+        denoiser = None
+        if model is not None and hasattr(model, "backbone_net"):
+            denoiser = model.backbone_net
+        return {
+            "kind": BACKBONE_UNET,
+            "class": "deepinv.models.UNet",
+            "ctor_kwargs": dict(UNET_CTOR_KWARGS),
+            "wrapper_class": "deepinv.models.ArtifactRemoval",
+            "wrapper_ctor_kwargs": dict(ARTIFACT_REMOVAL_CTOR_KWARGS),
+            "runtime_class": type(model).__name__ if model is not None else "ArtifactRemoval",
+            "runtime_denoiser_class": (
+                type(denoiser).__name__ if denoiser is not None else "UNet"
+            ),
+            "n_parameters": (
+                int(sum(p.numel() for p in model.parameters()))
+                if model is not None
+                else None
+            ),
+        }
+    return {
+        "kind": BACKBONE_MODL,
+        "class": "deepinv.models.MoDL",
+        "ctor_kwargs": {},
+        "wrapper_class": None,
+        "wrapper_ctor_kwargs": None,
+        "runtime_class": type(model).__name__ if model is not None else "MoDL",
+        "runtime_denoiser_class": None,
+        "n_parameters": (
+            int(sum(p.numel() for p in model.parameters())) if model is not None else None
+        ),
+    }
 
 
 def make_loader(dataset: XYDataset, batch_size: int, shuffle: bool) -> DataLoader:
