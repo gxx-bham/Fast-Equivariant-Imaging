@@ -30,7 +30,7 @@
     8
   ],
   "deepinv_version": "0.3.5",
-  "elapsed_sec": 73171.75435113907,
+  "elapsed_sec": 79010.03687810898,
   "fgt_formula": "after_T1.PSNR_T1 - after_T2.PSNR_T1",
   "fgt_definition": "Fgt = after_T1.PSNR_T1 - after_T2.PSNR_T1 on the T1 MRI test set only; T2 CT PSNR is logged separately and is not used in Fgt. Lower Fgt is better. Avg is appendix only.",
   "rows": [
@@ -213,6 +213,36 @@
       "Avg": 25.210484504699707,
       "Fgt": -0.2925586700439453,
       "arm_loss": "current: MCLoss() + EILoss(Rotate(n_trans=4)); buffer: MCLoss() + EILoss(Rotate(n_trans=4))"
+    },
+    {
+      "arm": "Fine-tune",
+      "N_buf": 4,
+      "seed": 2,
+      "PSNR_T1": 19.593039512634277,
+      "PSNR_T2": 27.160151481628418,
+      "Avg": 23.376595497131348,
+      "Fgt": 5.441677093505859,
+      "arm_loss": "current: MCLoss() + EILoss(Rotate(n_trans=4)); no buffer replay"
+    },
+    {
+      "arm": "ER+MC",
+      "N_buf": 4,
+      "seed": 2,
+      "PSNR_T1": 25.48310089111328,
+      "PSNR_T2": 25.166074752807617,
+      "Avg": 25.32458782196045,
+      "Fgt": -0.44838428497314453,
+      "arm_loss": "current: MCLoss() + EILoss(Rotate(n_trans=4)); buffer: MCLoss only"
+    },
+    {
+      "arm": "ER+EI",
+      "N_buf": 4,
+      "seed": 2,
+      "PSNR_T1": 25.2168025970459,
+      "PSNR_T2": 24.2804536819458,
+      "Avg": 24.74862813949585,
+      "Fgt": -0.18208599090576172,
+      "arm_loss": "current: MCLoss() + EILoss(Rotate(n_trans=4)); buffer: MCLoss() + EILoss(Rotate(n_trans=4))"
     }
   ],
   "aggregate_fgt": [
@@ -291,34 +321,37 @@
     {
       "arm": "ER+EI",
       "N_buf": 4,
-      "n_seeds": 1,
-      "Fgt_mean": 0.1075286865234375,
-      "Fgt_std": 0.0,
-      "Fgt_sem": 0.0,
+      "n_seeds": 2,
+      "Fgt_mean": -0.03727865219116211,
+      "Fgt_std": 0.20478850234134133,
+      "Fgt_sem": 0.1448073387145996,
       "Fgt_values": [
-        0.1075286865234375
+        0.1075286865234375,
+        -0.18208599090576172
       ]
     },
     {
       "arm": "ER+MC",
       "N_buf": 4,
-      "n_seeds": 1,
-      "Fgt_mean": -0.03125190734863281,
-      "Fgt_std": 0.0,
-      "Fgt_sem": 0.0,
+      "n_seeds": 2,
+      "Fgt_mean": -0.23981809616088867,
+      "Fgt_std": 0.2949571328707599,
+      "Fgt_sem": 0.20856618881225583,
       "Fgt_values": [
-        -0.03125190734863281
+        -0.03125190734863281,
+        -0.44838428497314453
       ]
     },
     {
       "arm": "Fine-tune",
       "N_buf": 4,
-      "n_seeds": 1,
-      "Fgt_mean": 4.576142311096191,
-      "Fgt_std": 0.0,
-      "Fgt_sem": 0.0,
+      "n_seeds": 2,
+      "Fgt_mean": 5.008909702301025,
+      "Fgt_std": 0.6120255139946991,
+      "Fgt_sem": 0.43276739120483393,
       "Fgt_values": [
-        4.576142311096191
+        4.576142311096191,
+        5.441677093505859
       ]
     },
     {
@@ -425,31 +458,34 @@
     {
       "arm": "ER+EI",
       "N_buf": 4,
-      "n_seeds": 1,
-      "Avg_mean": 25.35963010787964,
-      "Avg_std": 0.0,
+      "n_seeds": 2,
+      "Avg_mean": 25.054129123687744,
+      "Avg_std": 0.43204363516250577,
       "Avg_values": [
-        25.35963010787964
+        25.35963010787964,
+        24.74862813949585
       ]
     },
     {
       "arm": "ER+MC",
       "N_buf": 4,
-      "n_seeds": 1,
-      "Avg_mean": 25.196667671203613,
-      "Avg_std": 0.0,
+      "n_seeds": 2,
+      "Avg_mean": 25.26062774658203,
+      "Avg_std": 0.09045320605056416,
       "Avg_values": [
-        25.196667671203613
+        25.196667671203613,
+        25.32458782196045
       ]
     },
     {
       "arm": "Fine-tune",
       "N_buf": 4,
-      "n_seeds": 1,
-      "Avg_mean": 23.022714614868164,
-      "Avg_std": 0.0,
+      "n_seeds": 2,
+      "Avg_mean": 23.199655055999756,
+      "Avg_std": 0.25023157158057535,
       "Avg_values": [
-        23.022714614868164
+        23.022714614868164,
+        23.376595497131348
       ]
     },
     {
@@ -531,7 +567,7 @@
       },
       {
         "seed": 2,
-        "n_points": 2,
+        "n_points": 3,
         "n_EI_better_than_MC": 0,
         "majority": false,
         "points": [
@@ -550,6 +586,14 @@
             "Fgt_Fine-tune": 5.441677093505859,
             "ER+EI_better": false,
             "delta_MC_minus_EI": -0.10021114349365234
+          },
+          {
+            "N_buf": 4,
+            "Fgt_ER+EI": -0.18208599090576172,
+            "Fgt_ER+MC": -0.44838428497314453,
+            "Fgt_Fine-tune": 5.441677093505859,
+            "ER+EI_better": false,
+            "delta_MC_minus_EI": -0.2662982940673828
           }
         ]
       }
