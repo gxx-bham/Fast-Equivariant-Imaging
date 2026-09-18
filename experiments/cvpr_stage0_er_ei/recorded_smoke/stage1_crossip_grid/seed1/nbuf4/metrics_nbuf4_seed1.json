@@ -1,0 +1,914 @@
+{
+  "config": {
+    "seed": 1,
+    "N_buf": 4,
+    "arms": [
+      "finetune",
+      "er_mc",
+      "er_ei"
+    ],
+    "tiny": false,
+    "epochs": 1,
+    "epochs_t1": 80,
+    "epochs_t2": 160,
+    "max_batch_steps": 1000000000,
+    "n_train": 8,
+    "n_eval": 2,
+    "t1_accel": 4,
+    "t2_accel": 8,
+    "t1_mask_family": "gaussian",
+    "t2_mask_family": "gaussian",
+    "mask_generator_t1": "deepinv.physics.generator.GaussianMaskGenerator",
+    "mask_generator_t2": "deepinv.physics.generator.GaussianMaskGenerator",
+    "t1_anatomy": "knee",
+    "t2_anatomy": "knee",
+    "gate": "",
+    "domain_incremental": false,
+    "operator_shift": true,
+    "claim_scope": "cross-IP continual (T1 MRI knee Gaussian 4\u00d7 \u2192 T2 deepinv Tomography CT)",
+    "supervised": false,
+    "unsupervised": true,
+    "cross_ip": true,
+    "physics_class_t1": "deepinv.physics.MRI",
+    "physics_class_t2": "deepinv.physics.Tomography",
+    "ct_n_angles": 40,
+    "ct_img_size": 64,
+    "ct_demo_source": "deepinv.physics.Tomography physics-tour defaults: angles=40, img_width=64, normalize=True (int angles; not TomographyWithAstra)",
+    "device": "cpu",
+    "deepinv_version": "0.3.5",
+    "deepinv_pinned": "0.3.5",
+    "backbone": "deepinv.models.MoDL",
+    "losses_current": "MCLoss() + EILoss(Rotate(n_trans=4))",
+    "arm_losses": {
+      "Fine-tune": "current: MCLoss() + EILoss(Rotate(n_trans=4)); no buffer replay",
+      "ER+MC": "current: MCLoss() + EILoss(Rotate(n_trans=4)); buffer: MCLoss only",
+      "ER+EI": "current: MCLoss() + EILoss(Rotate(n_trans=4)); buffer: MCLoss() + EILoss(Rotate(n_trans=4))"
+    },
+    "physics": "T1 deepinv.physics.MRI + deepinv.physics.generator.GaussianMaskGenerator (knee 4x); T2 deepinv.physics.Tomography (angles=40, img_width=64) from deepinv.physics.Tomography physics-tour defaults: angles=40, img_width=64, normalize=True (int angles; not TomographyWithAstra)"
+  },
+  "rows": [
+    {
+      "arm": "Fine-tune",
+      "N_buf": 4,
+      "seed": 1,
+      "PSNR_T1": 20.519540786743164,
+      "PSNR_T2": 25.525888442993164,
+      "Avg": 23.022714614868164,
+      "Fgt": 4.576142311096191,
+      "arm_loss": "current: MCLoss() + EILoss(Rotate(n_trans=4)); no buffer replay"
+    },
+    {
+      "arm": "ER+MC",
+      "N_buf": 4,
+      "seed": 1,
+      "PSNR_T1": 25.12693500518799,
+      "PSNR_T2": 25.26640033721924,
+      "Avg": 25.196667671203613,
+      "Fgt": -0.03125190734863281,
+      "arm_loss": "current: MCLoss() + EILoss(Rotate(n_trans=4)); buffer: MCLoss only"
+    },
+    {
+      "arm": "ER+EI",
+      "N_buf": 4,
+      "seed": 1,
+      "PSNR_T1": 24.988154411315918,
+      "PSNR_T2": 25.73110580444336,
+      "Avg": 25.35963010787964,
+      "Fgt": 0.1075286865234375,
+      "arm_loss": "current: MCLoss() + EILoss(Rotate(n_trans=4)); buffer: MCLoss() + EILoss(Rotate(n_trans=4))"
+    }
+  ],
+  "details": [
+    {
+      "row": {
+        "arm": "Fine-tune",
+        "N_buf": 4,
+        "seed": 1,
+        "PSNR_T1": 20.519540786743164,
+        "PSNR_T2": 25.525888442993164,
+        "Avg": 23.022714614868164,
+        "Fgt": 4.576142311096191,
+        "arm_loss": "current: MCLoss() + EILoss(Rotate(n_trans=4)); no buffer replay"
+      },
+      "after_T1": {
+        "PSNR_T1": 25.095683097839355,
+        "PSNR_T2": 19.271674156188965
+      },
+      "after_T2": {
+        "PSNR_T1": 20.519540786743164,
+        "PSNR_T2": 25.525888442993164,
+        "Avg": 23.022714614868164,
+        "Fgt": 4.576142311096191
+      },
+      "N_buf": 4,
+      "deepinv_version": "0.3.5",
+      "buffer": {
+        "N_buf": 4,
+        "buffer_size": 4,
+        "n_seen": 8,
+        "n_distinct_ya": 4,
+        "n_distinct_y": 4,
+        "n_distinct_A": 4,
+        "holds_t1_A": true,
+        "accels": [
+          4,
+          4,
+          4,
+          4
+        ],
+        "tasks": [
+          "T1",
+          "T1",
+          "T1",
+          "T1"
+        ],
+        "full_distinct": true,
+        "slots": [
+          {
+            "slot": 0,
+            "task": "T1",
+            "accel": 4,
+            "sample_index": 0,
+            "y_id": "c75ca96c4345",
+            "mask_id": "5f804bcc07a4",
+            "mask_mean": 0.25
+          },
+          {
+            "slot": 1,
+            "task": "T1",
+            "accel": 4,
+            "sample_index": 5,
+            "y_id": "754f3a067650",
+            "mask_id": "7035a9218365",
+            "mask_mean": 0.25
+          },
+          {
+            "slot": 2,
+            "task": "T1",
+            "accel": 4,
+            "sample_index": 2,
+            "y_id": "01f7bd1e9b66",
+            "mask_id": "f25b27030e7c",
+            "mask_mean": 0.25
+          },
+          {
+            "slot": 3,
+            "task": "T1",
+            "accel": 4,
+            "sample_index": 3,
+            "y_id": "0b9e4385d1d1",
+            "mask_id": "6e1ba88939a3",
+            "mask_mean": 0.25
+          }
+        ]
+      },
+      "operators": {
+        "T1": {
+          "task": "T1",
+          "accel": 4,
+          "modality": "mri",
+          "physics_class": "deepinv.physics.MRI",
+          "n_angles": null,
+          "img_size": 128,
+          "mask_family": "gaussian",
+          "mask_generator": "deepinv.physics.generator.GaussianMaskGenerator",
+          "anatomy": "knee",
+          "n_train": 8,
+          "n_eval": 2,
+          "train_mask_ids": [
+            "5f804bcc07a4",
+            "7f658b2d8509",
+            "f25b27030e7c",
+            "6e1ba88939a3",
+            "ea2dea864a86",
+            "7035a9218365",
+            "5541dabbf737",
+            "5b4a801dea44"
+          ],
+          "n_distinct_train_A": 8,
+          "held_out_eval": true
+        },
+        "T2": {
+          "task": "T2",
+          "accel": 40,
+          "modality": "ct",
+          "physics_class": "deepinv.physics.Tomography",
+          "n_angles": 40,
+          "img_size": 64,
+          "mask_family": "tomography",
+          "mask_generator": "deepinv.physics.Tomography",
+          "anatomy": "ct100",
+          "n_train": 8,
+          "n_eval": 2,
+          "train_mask_ids": [],
+          "n_distinct_train_A": 1,
+          "held_out_eval": true
+        }
+      },
+      "n_train": 8,
+      "n_eval": 2,
+      "n_train_t2": 8,
+      "n_eval_t2": 2,
+      "held_out_eval": true,
+      "epochs_t1": 80,
+      "epochs_t2": 160,
+      "tiny": false,
+      "arm": "finetune",
+      "device": "cpu",
+      "wall_time_sec": 1683.9768109321594,
+      "schedule": {
+        "t1_anatomy": "knee",
+        "t2_anatomy": "ct100",
+        "t1_accel": 4,
+        "t2_accel": 40,
+        "t1_mask_family": "gaussian",
+        "t2_mask_family": "tomography",
+        "mask_generator_t1": "deepinv.physics.generator.GaussianMaskGenerator",
+        "mask_generator_t2": "deepinv.physics.Tomography",
+        "physics_class_t1": "deepinv.physics.MRI",
+        "physics_class_t2": "deepinv.physics.Tomography",
+        "modality_t1": "mri",
+        "modality_t2": "ct",
+        "ct_n_angles": 40,
+        "t1_img_size": 128,
+        "t2_img_size": 64,
+        "epochs_t1": 80,
+        "epochs_t2": 160,
+        "n_train": 8,
+        "n_eval": 2
+      },
+      "gate": "",
+      "supervised": false,
+      "cross_ip": true,
+      "physics_class_t1": "deepinv.physics.MRI",
+      "physics_class_t2": "deepinv.physics.Tomography",
+      "ct_n_angles": 40,
+      "train_loss": "current: MCLoss() + EILoss(Rotate(n_trans=4)); no buffer replay",
+      "arm_loss": "current: MCLoss() + EILoss(Rotate(n_trans=4)); no buffer replay",
+      "unsupervised": true,
+      "replay": null,
+      "fgt_handcheck": {
+        "formula": "after_T1.PSNR_T1 - after_T2.PSNR_T1",
+        "expected": 4.576142311096191,
+        "logged": 4.576142311096191,
+        "ok": true
+      },
+      "reviewer_check": {
+        "source": "operators/schedule (not stale config.t2_*)",
+        "cross_ip": true,
+        "unsupervised": true,
+        "physics_class_t1": "deepinv.physics.MRI",
+        "physics_class_t2": "deepinv.physics.Tomography",
+        "ct_n_angles": 40,
+        "t2_is_tomography": true,
+        "n_angles_40": true,
+        "fgt_handcheck_ok": true,
+        "replay_rebuilds_mri": true,
+        "BufferReplayLoss_logged": null,
+        "pass": true
+      },
+      "domain_incremental": true,
+      "mask_family_to_class": {
+        "gaussian": "deepinv.physics.generator.GaussianMaskGenerator",
+        "random": "deepinv.physics.generator.RandomMaskGenerator"
+      }
+    },
+    {
+      "row": {
+        "arm": "ER+MC",
+        "N_buf": 4,
+        "seed": 1,
+        "PSNR_T1": 25.12693500518799,
+        "PSNR_T2": 25.26640033721924,
+        "Avg": 25.196667671203613,
+        "Fgt": -0.03125190734863281,
+        "arm_loss": "current: MCLoss() + EILoss(Rotate(n_trans=4)); buffer: MCLoss only"
+      },
+      "after_T1": {
+        "PSNR_T1": 25.095683097839355,
+        "PSNR_T2": 19.271674156188965
+      },
+      "after_T2": {
+        "PSNR_T1": 25.12693500518799,
+        "PSNR_T2": 25.26640033721924,
+        "Avg": 25.196667671203613,
+        "Fgt": -0.03125190734863281
+      },
+      "N_buf": 4,
+      "deepinv_version": "0.3.5",
+      "buffer": {
+        "N_buf": 4,
+        "buffer_size": 4,
+        "n_seen": 8,
+        "n_distinct_ya": 4,
+        "n_distinct_y": 4,
+        "n_distinct_A": 4,
+        "holds_t1_A": true,
+        "accels": [
+          4,
+          4,
+          4,
+          4
+        ],
+        "tasks": [
+          "T1",
+          "T1",
+          "T1",
+          "T1"
+        ],
+        "full_distinct": true,
+        "slots": [
+          {
+            "slot": 0,
+            "task": "T1",
+            "accel": 4,
+            "sample_index": 0,
+            "y_id": "c75ca96c4345",
+            "mask_id": "5f804bcc07a4",
+            "mask_mean": 0.25
+          },
+          {
+            "slot": 1,
+            "task": "T1",
+            "accel": 4,
+            "sample_index": 5,
+            "y_id": "754f3a067650",
+            "mask_id": "7035a9218365",
+            "mask_mean": 0.25
+          },
+          {
+            "slot": 2,
+            "task": "T1",
+            "accel": 4,
+            "sample_index": 2,
+            "y_id": "01f7bd1e9b66",
+            "mask_id": "f25b27030e7c",
+            "mask_mean": 0.25
+          },
+          {
+            "slot": 3,
+            "task": "T1",
+            "accel": 4,
+            "sample_index": 3,
+            "y_id": "0b9e4385d1d1",
+            "mask_id": "6e1ba88939a3",
+            "mask_mean": 0.25
+          }
+        ]
+      },
+      "operators": {
+        "T1": {
+          "task": "T1",
+          "accel": 4,
+          "modality": "mri",
+          "physics_class": "deepinv.physics.MRI",
+          "n_angles": null,
+          "img_size": 128,
+          "mask_family": "gaussian",
+          "mask_generator": "deepinv.physics.generator.GaussianMaskGenerator",
+          "anatomy": "knee",
+          "n_train": 8,
+          "n_eval": 2,
+          "train_mask_ids": [
+            "5f804bcc07a4",
+            "7f658b2d8509",
+            "f25b27030e7c",
+            "6e1ba88939a3",
+            "ea2dea864a86",
+            "7035a9218365",
+            "5541dabbf737",
+            "5b4a801dea44"
+          ],
+          "n_distinct_train_A": 8,
+          "held_out_eval": true
+        },
+        "T2": {
+          "task": "T2",
+          "accel": 40,
+          "modality": "ct",
+          "physics_class": "deepinv.physics.Tomography",
+          "n_angles": 40,
+          "img_size": 64,
+          "mask_family": "tomography",
+          "mask_generator": "deepinv.physics.Tomography",
+          "anatomy": "ct100",
+          "n_train": 8,
+          "n_eval": 2,
+          "train_mask_ids": [],
+          "n_distinct_train_A": 1,
+          "held_out_eval": true
+        }
+      },
+      "n_train": 8,
+      "n_eval": 2,
+      "n_train_t2": 8,
+      "n_eval_t2": 2,
+      "held_out_eval": true,
+      "epochs_t1": 80,
+      "epochs_t2": 160,
+      "tiny": false,
+      "arm": "er_mc",
+      "device": "cpu",
+      "wall_time_sec": 1809.0593357086182,
+      "schedule": {
+        "t1_anatomy": "knee",
+        "t2_anatomy": "ct100",
+        "t1_accel": 4,
+        "t2_accel": 40,
+        "t1_mask_family": "gaussian",
+        "t2_mask_family": "tomography",
+        "mask_generator_t1": "deepinv.physics.generator.GaussianMaskGenerator",
+        "mask_generator_t2": "deepinv.physics.Tomography",
+        "physics_class_t1": "deepinv.physics.MRI",
+        "physics_class_t2": "deepinv.physics.Tomography",
+        "modality_t1": "mri",
+        "modality_t2": "ct",
+        "ct_n_angles": 40,
+        "t1_img_size": 128,
+        "t2_img_size": 64,
+        "epochs_t1": 80,
+        "epochs_t2": 160,
+        "n_train": 8,
+        "n_eval": 2
+      },
+      "gate": "",
+      "supervised": false,
+      "cross_ip": true,
+      "physics_class_t1": "deepinv.physics.MRI",
+      "physics_class_t2": "deepinv.physics.Tomography",
+      "ct_n_angles": 40,
+      "train_loss": "current: MCLoss() + EILoss(Rotate(n_trans=4)); buffer: MCLoss only",
+      "arm_loss": "current: MCLoss() + EILoss(Rotate(n_trans=4)); buffer: MCLoss only",
+      "unsupervised": true,
+      "replay": {
+        "n_forwards": 1281,
+        "first_BufferReplayLoss": 4.010855991509743e-05,
+        "max_abs_BufferReplayLoss": 0.004371246788650751,
+        "BufferReplayLoss_nonzero": true,
+        "rebuilds_mri_from_stored_mask": true,
+        "make_mri_physics": true,
+        "replay_physics_class": "deepinv.physics.MRI",
+        "y_b_shape": [
+          1,
+          2,
+          128,
+          128
+        ],
+        "mask_shape": [
+          1,
+          2,
+          128,
+          128
+        ],
+        "never_fed_mri_into_tomography": true
+      },
+      "fgt_handcheck": {
+        "formula": "after_T1.PSNR_T1 - after_T2.PSNR_T1",
+        "expected": -0.03125190734863281,
+        "logged": -0.03125190734863281,
+        "ok": true
+      },
+      "reviewer_check": {
+        "source": "operators/schedule (not stale config.t2_*)",
+        "cross_ip": true,
+        "unsupervised": true,
+        "physics_class_t1": "deepinv.physics.MRI",
+        "physics_class_t2": "deepinv.physics.Tomography",
+        "ct_n_angles": 40,
+        "t2_is_tomography": true,
+        "n_angles_40": true,
+        "fgt_handcheck_ok": true,
+        "replay_rebuilds_mri": true,
+        "BufferReplayLoss_logged": {
+          "n_forwards": 1281,
+          "first_BufferReplayLoss": 4.010855991509743e-05,
+          "max_abs_BufferReplayLoss": 0.004371246788650751,
+          "BufferReplayLoss_nonzero": true,
+          "rebuilds_mri_from_stored_mask": true,
+          "make_mri_physics": true,
+          "replay_physics_class": "deepinv.physics.MRI",
+          "y_b_shape": [
+            1,
+            2,
+            128,
+            128
+          ],
+          "mask_shape": [
+            1,
+            2,
+            128,
+            128
+          ],
+          "never_fed_mri_into_tomography": true
+        },
+        "pass": true
+      },
+      "domain_incremental": true,
+      "mask_family_to_class": {
+        "gaussian": "deepinv.physics.generator.GaussianMaskGenerator",
+        "random": "deepinv.physics.generator.RandomMaskGenerator"
+      }
+    },
+    {
+      "row": {
+        "arm": "ER+EI",
+        "N_buf": 4,
+        "seed": 1,
+        "PSNR_T1": 24.988154411315918,
+        "PSNR_T2": 25.73110580444336,
+        "Avg": 25.35963010787964,
+        "Fgt": 0.1075286865234375,
+        "arm_loss": "current: MCLoss() + EILoss(Rotate(n_trans=4)); buffer: MCLoss() + EILoss(Rotate(n_trans=4))"
+      },
+      "after_T1": {
+        "PSNR_T1": 25.095683097839355,
+        "PSNR_T2": 19.271674156188965
+      },
+      "after_T2": {
+        "PSNR_T1": 24.988154411315918,
+        "PSNR_T2": 25.73110580444336,
+        "Avg": 25.35963010787964,
+        "Fgt": 0.1075286865234375
+      },
+      "N_buf": 4,
+      "deepinv_version": "0.3.5",
+      "buffer": {
+        "N_buf": 4,
+        "buffer_size": 4,
+        "n_seen": 8,
+        "n_distinct_ya": 4,
+        "n_distinct_y": 4,
+        "n_distinct_A": 4,
+        "holds_t1_A": true,
+        "accels": [
+          4,
+          4,
+          4,
+          4
+        ],
+        "tasks": [
+          "T1",
+          "T1",
+          "T1",
+          "T1"
+        ],
+        "full_distinct": true,
+        "slots": [
+          {
+            "slot": 0,
+            "task": "T1",
+            "accel": 4,
+            "sample_index": 0,
+            "y_id": "c75ca96c4345",
+            "mask_id": "5f804bcc07a4",
+            "mask_mean": 0.25
+          },
+          {
+            "slot": 1,
+            "task": "T1",
+            "accel": 4,
+            "sample_index": 5,
+            "y_id": "754f3a067650",
+            "mask_id": "7035a9218365",
+            "mask_mean": 0.25
+          },
+          {
+            "slot": 2,
+            "task": "T1",
+            "accel": 4,
+            "sample_index": 2,
+            "y_id": "01f7bd1e9b66",
+            "mask_id": "f25b27030e7c",
+            "mask_mean": 0.25
+          },
+          {
+            "slot": 3,
+            "task": "T1",
+            "accel": 4,
+            "sample_index": 3,
+            "y_id": "0b9e4385d1d1",
+            "mask_id": "6e1ba88939a3",
+            "mask_mean": 0.25
+          }
+        ]
+      },
+      "operators": {
+        "T1": {
+          "task": "T1",
+          "accel": 4,
+          "modality": "mri",
+          "physics_class": "deepinv.physics.MRI",
+          "n_angles": null,
+          "img_size": 128,
+          "mask_family": "gaussian",
+          "mask_generator": "deepinv.physics.generator.GaussianMaskGenerator",
+          "anatomy": "knee",
+          "n_train": 8,
+          "n_eval": 2,
+          "train_mask_ids": [
+            "5f804bcc07a4",
+            "7f658b2d8509",
+            "f25b27030e7c",
+            "6e1ba88939a3",
+            "ea2dea864a86",
+            "7035a9218365",
+            "5541dabbf737",
+            "5b4a801dea44"
+          ],
+          "n_distinct_train_A": 8,
+          "held_out_eval": true
+        },
+        "T2": {
+          "task": "T2",
+          "accel": 40,
+          "modality": "ct",
+          "physics_class": "deepinv.physics.Tomography",
+          "n_angles": 40,
+          "img_size": 64,
+          "mask_family": "tomography",
+          "mask_generator": "deepinv.physics.Tomography",
+          "anatomy": "ct100",
+          "n_train": 8,
+          "n_eval": 2,
+          "train_mask_ids": [],
+          "n_distinct_train_A": 1,
+          "held_out_eval": true
+        }
+      },
+      "n_train": 8,
+      "n_eval": 2,
+      "n_train_t2": 8,
+      "n_eval_t2": 2,
+      "held_out_eval": true,
+      "epochs_t1": 80,
+      "epochs_t2": 160,
+      "tiny": false,
+      "arm": "er_ei",
+      "device": "cpu",
+      "wall_time_sec": 2339.054756164551,
+      "schedule": {
+        "t1_anatomy": "knee",
+        "t2_anatomy": "ct100",
+        "t1_accel": 4,
+        "t2_accel": 40,
+        "t1_mask_family": "gaussian",
+        "t2_mask_family": "tomography",
+        "mask_generator_t1": "deepinv.physics.generator.GaussianMaskGenerator",
+        "mask_generator_t2": "deepinv.physics.Tomography",
+        "physics_class_t1": "deepinv.physics.MRI",
+        "physics_class_t2": "deepinv.physics.Tomography",
+        "modality_t1": "mri",
+        "modality_t2": "ct",
+        "ct_n_angles": 40,
+        "t1_img_size": 128,
+        "t2_img_size": 64,
+        "epochs_t1": 80,
+        "epochs_t2": 160,
+        "n_train": 8,
+        "n_eval": 2
+      },
+      "gate": "",
+      "supervised": false,
+      "cross_ip": true,
+      "physics_class_t1": "deepinv.physics.MRI",
+      "physics_class_t2": "deepinv.physics.Tomography",
+      "ct_n_angles": 40,
+      "train_loss": "current: MCLoss() + EILoss(Rotate(n_trans=4)); buffer: MCLoss() + EILoss(Rotate(n_trans=4))",
+      "arm_loss": "current: MCLoss() + EILoss(Rotate(n_trans=4)); buffer: MCLoss() + EILoss(Rotate(n_trans=4))",
+      "unsupervised": true,
+      "replay": {
+        "n_forwards": 1281,
+        "first_BufferReplayLoss": 0.00016603329277131706,
+        "max_abs_BufferReplayLoss": 0.003727193456143141,
+        "BufferReplayLoss_nonzero": true,
+        "rebuilds_mri_from_stored_mask": true,
+        "make_mri_physics": true,
+        "replay_physics_class": "deepinv.physics.MRI",
+        "y_b_shape": [
+          1,
+          2,
+          128,
+          128
+        ],
+        "mask_shape": [
+          1,
+          2,
+          128,
+          128
+        ],
+        "never_fed_mri_into_tomography": true
+      },
+      "fgt_handcheck": {
+        "formula": "after_T1.PSNR_T1 - after_T2.PSNR_T1",
+        "expected": 0.1075286865234375,
+        "logged": 0.1075286865234375,
+        "ok": true
+      },
+      "reviewer_check": {
+        "source": "operators/schedule (not stale config.t2_*)",
+        "cross_ip": true,
+        "unsupervised": true,
+        "physics_class_t1": "deepinv.physics.MRI",
+        "physics_class_t2": "deepinv.physics.Tomography",
+        "ct_n_angles": 40,
+        "t2_is_tomography": true,
+        "n_angles_40": true,
+        "fgt_handcheck_ok": true,
+        "replay_rebuilds_mri": true,
+        "BufferReplayLoss_logged": {
+          "n_forwards": 1281,
+          "first_BufferReplayLoss": 0.00016603329277131706,
+          "max_abs_BufferReplayLoss": 0.003727193456143141,
+          "BufferReplayLoss_nonzero": true,
+          "rebuilds_mri_from_stored_mask": true,
+          "make_mri_physics": true,
+          "replay_physics_class": "deepinv.physics.MRI",
+          "y_b_shape": [
+            1,
+            2,
+            128,
+            128
+          ],
+          "mask_shape": [
+            1,
+            2,
+            128,
+            128
+          ],
+          "never_fed_mri_into_tomography": true
+        },
+        "pass": true
+      },
+      "domain_incremental": true,
+      "mask_family_to_class": {
+        "gaussian": "deepinv.physics.generator.GaussianMaskGenerator",
+        "random": "deepinv.physics.generator.RandomMaskGenerator"
+      }
+    }
+  ],
+  "go_kill": {
+    "verdict": "INCONCLUSIVE",
+    "reason": "ER+EI Fgt is not better than ER+MC on the N_buf values that were run; run N_buf=4 to apply the kill rule on both N.",
+    "comparisons": [
+      {
+        "N_buf": 4,
+        "Fgt_ER+EI": 0.1075286865234375,
+        "Fgt_ER+MC": -0.03125190734863281,
+        "Fgt_Fine-tune": 4.576142311096191,
+        "ER+EI_better_Fgt_than_ER+MC": false,
+        "delta_Fgt_MC_minus_EI": -0.1387805938720703
+      }
+    ],
+    "n_buf_observed": [
+      4
+    ],
+    "grid_complete": false,
+    "tiny": false,
+    "note": "Go/kill is defined on Fgt after T2 (lower is better). Tiny stubs must not be labeled GO/KILL."
+  },
+  "elapsed_sec": 5832.0977466106415,
+  "device": "cpu",
+  "supervised": false,
+  "unsupervised": true,
+  "cross_ip": true,
+  "n_distinct_ya": 4,
+  "distinct_slot_proof": [
+    {
+      "N_buf": 4,
+      "n_distinct_ya": 4,
+      "n_distinct_A": 4,
+      "n_distinct_y": 4,
+      "holds_t1_A": true,
+      "full_distinct": true,
+      "accels": [
+        4,
+        4,
+        4,
+        4
+      ],
+      "slots": [
+        {
+          "slot": 0,
+          "y_id": "c75ca96c4345",
+          "mask_id": "5f804bcc07a4",
+          "accel": 4,
+          "task": "T1"
+        },
+        {
+          "slot": 1,
+          "y_id": "754f3a067650",
+          "mask_id": "7035a9218365",
+          "accel": 4,
+          "task": "T1"
+        },
+        {
+          "slot": 2,
+          "y_id": "01f7bd1e9b66",
+          "mask_id": "f25b27030e7c",
+          "accel": 4,
+          "task": "T1"
+        },
+        {
+          "slot": 3,
+          "y_id": "0b9e4385d1d1",
+          "mask_id": "6e1ba88939a3",
+          "accel": 4,
+          "task": "T1"
+        }
+      ]
+    },
+    {
+      "N_buf": 4,
+      "n_distinct_ya": 4,
+      "n_distinct_A": 4,
+      "n_distinct_y": 4,
+      "holds_t1_A": true,
+      "full_distinct": true,
+      "accels": [
+        4,
+        4,
+        4,
+        4
+      ],
+      "slots": [
+        {
+          "slot": 0,
+          "y_id": "c75ca96c4345",
+          "mask_id": "5f804bcc07a4",
+          "accel": 4,
+          "task": "T1"
+        },
+        {
+          "slot": 1,
+          "y_id": "754f3a067650",
+          "mask_id": "7035a9218365",
+          "accel": 4,
+          "task": "T1"
+        },
+        {
+          "slot": 2,
+          "y_id": "01f7bd1e9b66",
+          "mask_id": "f25b27030e7c",
+          "accel": 4,
+          "task": "T1"
+        },
+        {
+          "slot": 3,
+          "y_id": "0b9e4385d1d1",
+          "mask_id": "6e1ba88939a3",
+          "accel": 4,
+          "task": "T1"
+        }
+      ]
+    },
+    {
+      "N_buf": 4,
+      "n_distinct_ya": 4,
+      "n_distinct_A": 4,
+      "n_distinct_y": 4,
+      "holds_t1_A": true,
+      "full_distinct": true,
+      "accels": [
+        4,
+        4,
+        4,
+        4
+      ],
+      "slots": [
+        {
+          "slot": 0,
+          "y_id": "c75ca96c4345",
+          "mask_id": "5f804bcc07a4",
+          "accel": 4,
+          "task": "T1"
+        },
+        {
+          "slot": 1,
+          "y_id": "754f3a067650",
+          "mask_id": "7035a9218365",
+          "accel": 4,
+          "task": "T1"
+        },
+        {
+          "slot": 2,
+          "y_id": "01f7bd1e9b66",
+          "mask_id": "f25b27030e7c",
+          "accel": 4,
+          "task": "T1"
+        },
+        {
+          "slot": 3,
+          "y_id": "0b9e4385d1d1",
+          "mask_id": "6e1ba88939a3",
+          "accel": 4,
+          "task": "T1"
+        }
+      ]
+    }
+  ],
+  "fgt_formula": "after_T1.PSNR_T1 - after_T2.PSNR_T1",
+  "fgt_definition": "Fgt = after_T1.PSNR_T1 - after_T2.PSNR_T1 on the T1 MRI test set only; T2 CT PSNR is logged separately and is not used in Fgt. Avg = 0.5 * (PSNR_T1_after_T2 + PSNR_T2_after_T2). CSV PSNR_T1/PSNR_T2 are after T2.",
+  "physics_class_t1": "deepinv.physics.MRI",
+  "physics_class_t2": "deepinv.physics.Tomography",
+  "ct_n_angles": 40
+}

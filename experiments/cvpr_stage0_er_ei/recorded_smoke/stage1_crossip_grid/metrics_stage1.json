@@ -30,7 +30,7 @@
     8
   ],
   "deepinv_version": "0.3.5",
-  "elapsed_sec": 49926.79031062126,
+  "elapsed_sec": 55758.88990497589,
   "fgt_formula": "after_T1.PSNR_T1 - after_T2.PSNR_T1",
   "fgt_definition": "Fgt = after_T1.PSNR_T1 - after_T2.PSNR_T1 on the T1 MRI test set only; T2 CT PSNR is logged separately and is not used in Fgt. Lower Fgt is better. Avg is appendix only.",
   "rows": [
@@ -92,6 +92,36 @@
       "PSNR_T2": 24.814766883850098,
       "Avg": 24.967266082763672,
       "Fgt": -0.024082183837890625,
+      "arm_loss": "current: MCLoss() + EILoss(Rotate(n_trans=4)); buffer: MCLoss() + EILoss(Rotate(n_trans=4))"
+    },
+    {
+      "arm": "Fine-tune",
+      "N_buf": 4,
+      "seed": 1,
+      "PSNR_T1": 20.519540786743164,
+      "PSNR_T2": 25.525888442993164,
+      "Avg": 23.022714614868164,
+      "Fgt": 4.576142311096191,
+      "arm_loss": "current: MCLoss() + EILoss(Rotate(n_trans=4)); no buffer replay"
+    },
+    {
+      "arm": "ER+MC",
+      "N_buf": 4,
+      "seed": 1,
+      "PSNR_T1": 25.12693500518799,
+      "PSNR_T2": 25.26640033721924,
+      "Avg": 25.196667671203613,
+      "Fgt": -0.03125190734863281,
+      "arm_loss": "current: MCLoss() + EILoss(Rotate(n_trans=4)); buffer: MCLoss only"
+    },
+    {
+      "arm": "ER+EI",
+      "N_buf": 4,
+      "seed": 1,
+      "PSNR_T1": 24.988154411315918,
+      "PSNR_T2": 25.73110580444336,
+      "Avg": 25.35963010787964,
+      "Fgt": 0.1075286865234375,
       "arm_loss": "current: MCLoss() + EILoss(Rotate(n_trans=4)); buffer: MCLoss() + EILoss(Rotate(n_trans=4))"
     }
   ],
@@ -161,6 +191,39 @@
       "Fgt_values": [
         4.576142311096191
       ]
+    },
+    {
+      "arm": "ER+EI",
+      "N_buf": 4,
+      "n_seeds": 1,
+      "Fgt_mean": 0.1075286865234375,
+      "Fgt_std": 0.0,
+      "Fgt_sem": 0.0,
+      "Fgt_values": [
+        0.1075286865234375
+      ]
+    },
+    {
+      "arm": "ER+MC",
+      "N_buf": 4,
+      "n_seeds": 1,
+      "Fgt_mean": -0.03125190734863281,
+      "Fgt_std": 0.0,
+      "Fgt_sem": 0.0,
+      "Fgt_values": [
+        -0.03125190734863281
+      ]
+    },
+    {
+      "arm": "Fine-tune",
+      "N_buf": 4,
+      "n_seeds": 1,
+      "Fgt_mean": 4.576142311096191,
+      "Fgt_std": 0.0,
+      "Fgt_sem": 0.0,
+      "Fgt_values": [
+        4.576142311096191
+      ]
     }
   ],
   "appendix_avg": [
@@ -223,6 +286,36 @@
       "Avg_values": [
         23.022714614868164
       ]
+    },
+    {
+      "arm": "ER+EI",
+      "N_buf": 4,
+      "n_seeds": 1,
+      "Avg_mean": 25.35963010787964,
+      "Avg_std": 0.0,
+      "Avg_values": [
+        25.35963010787964
+      ]
+    },
+    {
+      "arm": "ER+MC",
+      "N_buf": 4,
+      "n_seeds": 1,
+      "Avg_mean": 25.196667671203613,
+      "Avg_std": 0.0,
+      "Avg_values": [
+        25.196667671203613
+      ]
+    },
+    {
+      "arm": "Fine-tune",
+      "N_buf": 4,
+      "n_seeds": 1,
+      "Avg_mean": 23.022714614868164,
+      "Avg_std": 0.0,
+      "Avg_values": [
+        23.022714614868164
+      ]
     }
   ],
   "failed_cells": [],
@@ -233,7 +326,7 @@
     "per_seed": [
       {
         "seed": 1,
-        "n_points": 2,
+        "n_points": 3,
         "n_EI_better_than_MC": 2,
         "majority": true,
         "points": [
@@ -252,6 +345,14 @@
             "Fgt_Fine-tune": 4.576142311096191,
             "ER+EI_better": true,
             "delta_MC_minus_EI": 0.71722412109375
+          },
+          {
+            "N_buf": 4,
+            "Fgt_ER+EI": 0.1075286865234375,
+            "Fgt_ER+MC": -0.03125190734863281,
+            "Fgt_Fine-tune": 4.576142311096191,
+            "ER+EI_better": false,
+            "delta_MC_minus_EI": -0.1387805938720703
           }
         ]
       }
@@ -265,7 +366,8 @@
     ],
     "n_buf_observed": [
       1,
-      2
+      2,
+      4
     ],
     "grid_complete": false,
     "tiny": false,
