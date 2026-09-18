@@ -30,7 +30,7 @@
     8
   ],
   "deepinv_version": "0.3.5",
-  "elapsed_sec": 90677.28394269943,
+  "elapsed_sec": 96485.34443736076,
   "fgt_formula": "after_T1.PSNR_T1 - after_T2.PSNR_T1",
   "fgt_definition": "Fgt = after_T1.PSNR_T1 - after_T2.PSNR_T1 on the T1 MRI test set only; T2 CT PSNR is logged separately and is not used in Fgt. Lower Fgt is better. Avg is appendix only.",
   "rows": [
@@ -303,6 +303,36 @@
       "Avg": 23.870564460754395,
       "Fgt": 0.10756874084472656,
       "arm_loss": "current: MCLoss() + EILoss(Rotate(n_trans=4)); buffer: MCLoss() + EILoss(Rotate(n_trans=4))"
+    },
+    {
+      "arm": "Fine-tune",
+      "N_buf": 2,
+      "seed": 3,
+      "PSNR_T1": 20.804150581359863,
+      "PSNR_T2": 25.080466270446777,
+      "Avg": 22.94230842590332,
+      "Fgt": 4.146550178527832,
+      "arm_loss": "current: MCLoss() + EILoss(Rotate(n_trans=4)); no buffer replay"
+    },
+    {
+      "arm": "ER+MC",
+      "N_buf": 2,
+      "seed": 3,
+      "PSNR_T1": 25.122305870056152,
+      "PSNR_T2": 24.053844451904297,
+      "Avg": 24.588075160980225,
+      "Fgt": -0.17160511016845703,
+      "arm_loss": "current: MCLoss() + EILoss(Rotate(n_trans=4)); buffer: MCLoss only"
+    },
+    {
+      "arm": "ER+EI",
+      "N_buf": 2,
+      "seed": 3,
+      "PSNR_T1": 24.709108352661133,
+      "PSNR_T2": 21.108776092529297,
+      "Avg": 22.908942222595215,
+      "Fgt": 0.2415924072265625,
+      "arm_loss": "current: MCLoss() + EILoss(Rotate(n_trans=4)); buffer: MCLoss() + EILoss(Rotate(n_trans=4))"
     }
   ],
   "aggregate_fgt": [
@@ -348,37 +378,40 @@
     {
       "arm": "ER+EI",
       "N_buf": 2,
-      "n_seeds": 2,
-      "Fgt_mean": -0.15832042694091797,
-      "Fgt_std": 0.18984154398543784,
-      "Fgt_sem": 0.13423824310302732,
+      "n_seeds": 3,
+      "Fgt_mean": -0.025016148885091145,
+      "Fgt_std": 0.26707676341333597,
+      "Fgt_sem": 0.1541968412509835,
       "Fgt_values": [
         -0.024082183837890625,
-        -0.2925586700439453
+        -0.2925586700439453,
+        0.2415924072265625
       ]
     },
     {
       "arm": "ER+MC",
       "N_buf": 2,
-      "n_seeds": 2,
-      "Fgt_mean": 0.15018606185913086,
-      "Fgt_std": 0.7678555627562097,
-      "Fgt_sem": 0.5429558753967284,
+      "n_seeds": 3,
+      "Fgt_mean": 0.0429223378499349,
+      "Fgt_std": 0.573862006141538,
+      "Fgt_sem": 0.33131938372351566,
       "Fgt_values": [
         0.6931419372558594,
-        -0.39276981353759766
+        -0.39276981353759766,
+        -0.17160511016845703
       ]
     },
     {
       "arm": "Fine-tune",
       "N_buf": 2,
-      "n_seeds": 2,
-      "Fgt_mean": 5.008909702301025,
-      "Fgt_std": 0.6120255139946991,
-      "Fgt_sem": 0.43276739120483393,
+      "n_seeds": 3,
+      "Fgt_mean": 4.721456527709961,
+      "Fgt_std": 0.6596784047076885,
+      "Fgt_sem": 0.38086550453656687,
       "Fgt_values": [
         4.576142311096191,
-        5.441677093505859
+        5.441677093505859,
+        4.146550178527832
       ]
     },
     {
@@ -494,34 +527,37 @@
     {
       "arm": "ER+EI",
       "N_buf": 2,
-      "n_seeds": 2,
-      "Avg_mean": 25.08887529373169,
-      "Avg_std": 0.1719813954604614,
+      "n_seeds": 3,
+      "Avg_mean": 24.3622309366862,
+      "Avg_std": 1.264446465877631,
       "Avg_values": [
         24.967266082763672,
-        25.210484504699707
+        25.210484504699707,
+        22.908942222595215
       ]
     },
     {
       "arm": "ER+MC",
       "N_buf": 2,
-      "n_seeds": 2,
-      "Avg_mean": 24.63766574859619,
-      "Avg_std": 0.8236815924197995,
+      "n_seeds": 3,
+      "Avg_mean": 24.6211355527242,
+      "Avg_std": 0.5831341397760101,
       "Avg_values": [
         24.055234909057617,
-        25.220096588134766
+        25.220096588134766,
+        24.588075160980225
       ]
     },
     {
       "arm": "Fine-tune",
       "N_buf": 2,
-      "n_seeds": 2,
-      "Avg_mean": 23.199655055999756,
-      "Avg_std": 0.25023157158057535,
+      "n_seeds": 3,
+      "Avg_mean": 23.11387284596761,
+      "Avg_std": 0.23104909084832928,
       "Avg_values": [
         23.022714614868164,
-        23.376595497131348
+        23.376595497131348,
+        22.94230842590332
       ]
     },
     {
@@ -679,7 +715,7 @@
       },
       {
         "seed": 3,
-        "n_points": 1,
+        "n_points": 2,
         "n_EI_better_than_MC": 0,
         "majority": false,
         "points": [
@@ -690,6 +726,14 @@
             "Fgt_Fine-tune": 4.146550178527832,
             "ER+EI_better": false,
             "delta_MC_minus_EI": -0.054821014404296875
+          },
+          {
+            "N_buf": 2,
+            "Fgt_ER+EI": 0.2415924072265625,
+            "Fgt_ER+MC": -0.17160511016845703,
+            "Fgt_Fine-tune": 4.146550178527832,
+            "ER+EI_better": false,
+            "delta_MC_minus_EI": -0.41319751739501953
           }
         ]
       }
