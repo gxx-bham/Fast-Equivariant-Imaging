@@ -1,0 +1,23 @@
+gate=E
+label=cross-IP continual
+supervised=false
+cross_ip=true
+train_loss=MCLoss() + EILoss(Rotate(n_trans=4))
+physics_class_t1=deepinv.physics.MRI
+physics_class_t2=deepinv.physics.Tomography
+ct_n_angles=40
+ct_img_size=64
+ct_demo_source=deepinv.physics.Tomography physics-tour defaults: angles=40, img_width=64, normalize=True (int angles; not TomographyWithAstra)
+stream=T1 knee Gaussian Cartesian 4x -> T2 CT Tomography 40-view 64x64
+fgt=after_T1.PSNR_T1 - after_T2.PSNR_T1 (T1 MRI test only)
+device=cpu
+arm=finetune
+n_train=6
+n_eval=2
+n_buf=4
+epochs_t1=80
+epochs_t2=160
+tiny=false
+start_utc=2026-09-15T16:05:58Z
+end_utc=2026-09-15T16:25:08Z
+elapsed_sec=1150

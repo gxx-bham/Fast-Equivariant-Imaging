@@ -1,0 +1,278 @@
+{
+  "config": {
+    "seed": 1,
+    "N_buf": 4,
+    "arms": [
+      "finetune"
+    ],
+    "tiny": false,
+    "epochs": 1,
+    "epochs_t1": 80,
+    "epochs_t2": 160,
+    "max_batch_steps": 1000000000,
+    "n_train": 6,
+    "n_eval": 2,
+    "t1_accel": 4,
+    "t2_accel": 8,
+    "t1_mask_family": "gaussian",
+    "t2_mask_family": "random",
+    "mask_generator_t1": "deepinv.physics.generator.GaussianMaskGenerator",
+    "mask_generator_t2": "deepinv.physics.generator.RandomMaskGenerator",
+    "t1_anatomy": "knee",
+    "t2_anatomy": "knee",
+    "gate": "B",
+    "domain_incremental": false,
+    "device": "cpu",
+    "deepinv_version": "0.3.5",
+    "deepinv_pinned": "0.3.5",
+    "backbone": "deepinv.models.MoDL",
+    "losses_current": "MCLoss() + EILoss(Rotate(n_trans=4))",
+    "physics": "deepinv.physics.MRI + deepinv.physics.generator.GaussianMaskGenerator (knee 4x) then deepinv.physics.generator.RandomMaskGenerator (knee 8x), per-sample A"
+  },
+  "rows": [
+    {
+      "arm": "Fine-tune",
+      "N_buf": 4,
+      "seed": 1,
+      "PSNR_T1": 24.325682640075684,
+      "PSNR_T2": 21.701010704040527,
+      "Avg": 23.013346672058105,
+      "Fgt": 0.08097553253173828
+    }
+  ],
+  "details": [
+    {
+      "row": {
+        "arm": "Fine-tune",
+        "N_buf": 4,
+        "seed": 1,
+        "PSNR_T1": 24.325682640075684,
+        "PSNR_T2": 21.701010704040527,
+        "Avg": 23.013346672058105,
+        "Fgt": 0.08097553253173828
+      },
+      "after_T1": {
+        "PSNR_T1": 24.406658172607422,
+        "PSNR_T2": 21.91387367248535
+      },
+      "after_T2": {
+        "PSNR_T1": 24.325682640075684,
+        "PSNR_T2": 21.701010704040527,
+        "Avg": 23.013346672058105,
+        "Fgt": 0.08097553253173828
+      },
+      "N_buf": 4,
+      "deepinv_version": "0.3.5",
+      "buffer": {
+        "N_buf": 4,
+        "buffer_size": 4,
+        "n_seen": 6,
+        "n_distinct_ya": 4,
+        "n_distinct_y": 4,
+        "n_distinct_A": 4,
+        "holds_t1_A": true,
+        "accels": [
+          4,
+          4,
+          4,
+          4
+        ],
+        "tasks": [
+          "T1",
+          "T1",
+          "T1",
+          "T1"
+        ],
+        "full_distinct": true,
+        "slots": [
+          {
+            "slot": 0,
+            "task": "T1",
+            "accel": 4,
+            "sample_index": 0,
+            "y_id": "c991212198bf",
+            "mask_id": "658b2e826b6a",
+            "mask_mean": 0.25
+          },
+          {
+            "slot": 1,
+            "task": "T1",
+            "accel": 4,
+            "sample_index": 5,
+            "y_id": "1f3d769d36a0",
+            "mask_id": "8810346c1e3e",
+            "mask_mean": 0.25
+          },
+          {
+            "slot": 2,
+            "task": "T1",
+            "accel": 4,
+            "sample_index": 2,
+            "y_id": "3ed003237198",
+            "mask_id": "9cd3dd990f17",
+            "mask_mean": 0.25
+          },
+          {
+            "slot": 3,
+            "task": "T1",
+            "accel": 4,
+            "sample_index": 3,
+            "y_id": "a3001b0416fb",
+            "mask_id": "e2c537b8814c",
+            "mask_mean": 0.25
+          }
+        ]
+      },
+      "operators": {
+        "T1": {
+          "task": "T1",
+          "accel": 4,
+          "mask_family": "gaussian",
+          "mask_generator": "deepinv.physics.generator.GaussianMaskGenerator",
+          "anatomy": "knee",
+          "n_train": 6,
+          "n_eval": 2,
+          "train_mask_ids": [
+            "658b2e826b6a",
+            "01068589f773",
+            "9cd3dd990f17",
+            "e2c537b8814c",
+            "cdcac5b10551",
+            "8810346c1e3e"
+          ],
+          "n_distinct_train_A": 6,
+          "held_out_eval": true
+        },
+        "T2": {
+          "task": "T2",
+          "accel": 8,
+          "mask_family": "random",
+          "mask_generator": "deepinv.physics.generator.RandomMaskGenerator",
+          "anatomy": "knee",
+          "n_train": 6,
+          "n_eval": 2,
+          "train_mask_ids": [
+            "143befd29e19",
+            "70618528ad5d",
+            "f99c9d51d8fc",
+            "7c0b4fd5d373",
+            "b26986bcd37f",
+            "eb716910f87c"
+          ],
+          "n_distinct_train_A": 6,
+          "held_out_eval": true
+        }
+      },
+      "n_train": 6,
+      "n_eval": 2,
+      "n_train_t2": 6,
+      "n_eval_t2": 2,
+      "held_out_eval": true,
+      "epochs_t1": 80,
+      "epochs_t2": 160,
+      "tiny": false,
+      "arm": "finetune",
+      "device": "cpu",
+      "wall_time_sec": 602.4152505397797,
+      "schedule": {
+        "t1_anatomy": "knee",
+        "t2_anatomy": "knee",
+        "t1_accel": 4,
+        "t2_accel": 8,
+        "t1_mask_family": "gaussian",
+        "t2_mask_family": "random",
+        "mask_generator_t1": "deepinv.physics.generator.GaussianMaskGenerator",
+        "mask_generator_t2": "deepinv.physics.generator.RandomMaskGenerator",
+        "epochs_t1": 80,
+        "epochs_t2": 160,
+        "n_train": 6,
+        "n_eval": 2
+      },
+      "gate": "B",
+      "domain_incremental": false,
+      "mask_family_to_class": {
+        "gaussian": "deepinv.physics.generator.GaussianMaskGenerator",
+        "random": "deepinv.physics.generator.RandomMaskGenerator"
+      }
+    }
+  ],
+  "go_kill": {
+    "verdict": "INCONCLUSIVE",
+    "reason": "Need ER+EI and ER+MC Fgt at the evaluated N_buf values.",
+    "comparisons": [],
+    "n_buf_observed": [
+      4
+    ],
+    "grid_complete": false,
+    "tiny": false,
+    "note": "Go/kill is defined on Fgt after T2 (lower is better). Tiny stubs must not be labeled GO/KILL."
+  },
+  "elapsed_sec": 602.4171934127808,
+  "device": "cpu",
+  "distinct_slot_proof": {
+    "N_buf": 4,
+    "n_distinct_ya": 4,
+    "n_distinct_A": 4,
+    "n_distinct_y": 4,
+    "holds_t1_A": true,
+    "full_distinct": true,
+    "accels": [
+      4,
+      4,
+      4,
+      4
+    ],
+    "slots": [
+      {
+        "slot": 0,
+        "y_id": "c991212198bf",
+        "mask_id": "658b2e826b6a",
+        "accel": 4,
+        "task": "T1"
+      },
+      {
+        "slot": 1,
+        "y_id": "1f3d769d36a0",
+        "mask_id": "8810346c1e3e",
+        "accel": 4,
+        "task": "T1"
+      },
+      {
+        "slot": 2,
+        "y_id": "3ed003237198",
+        "mask_id": "9cd3dd990f17",
+        "accel": 4,
+        "task": "T1"
+      },
+      {
+        "slot": 3,
+        "y_id": "a3001b0416fb",
+        "mask_id": "e2c537b8814c",
+        "accel": 4,
+        "task": "T1"
+      }
+    ]
+  },
+  "fgt_definition": "Fgt = PSNR_T1_after_T1 - PSNR_T1_after_T2; Avg = 0.5 * (PSNR_T1_after_T2 + PSNR_T2_after_T2). CSV PSNR_T1/PSNR_T2 are after T2.",
+  "forgetting_gate": {
+    "verdict": "FAIL",
+    "Fgt": 0.08097553253173828,
+    "min_fgt": 0.2,
+    "clearly_positive": false,
+    "reason": "Fine-tune Fgt=0.0810 <= 0.2 (need a clear T1 PSNR drop after T2)."
+  },
+  "schedule": {
+    "t1_anatomy": "knee",
+    "t2_anatomy": "knee",
+    "t1_accel": 4,
+    "t2_accel": 8,
+    "t1_mask_family": "gaussian",
+    "t2_mask_family": "random",
+    "mask_generator_t1": "deepinv.physics.generator.GaussianMaskGenerator",
+    "mask_generator_t2": "deepinv.physics.generator.RandomMaskGenerator",
+    "epochs_t1": 80,
+    "epochs_t2": 160,
+    "n_train": 6,
+    "n_eval": 2
+  }
+}

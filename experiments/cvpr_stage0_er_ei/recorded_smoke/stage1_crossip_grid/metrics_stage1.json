@@ -1,0 +1,759 @@
+{
+  "label": "cross-IP continual",
+  "stage": "stage-1",
+  "device": "cpu",
+  "seeds": [
+    1,
+    2,
+    3
+  ],
+  "epochs_t1": 80,
+  "epochs_t2": 160,
+  "tiny": false,
+  "supervised": false,
+  "unsupervised": true,
+  "cross_ip": true,
+  "physics_class_t1": "deepinv.physics.MRI",
+  "physics_class_t2": "deepinv.physics.Tomography",
+  "ct_n_angles": 40,
+  "arm_losses": {
+    "Fine-tune": "current: MCLoss() + EILoss(Rotate(n_trans=4)); no buffer replay",
+    "ER+MC": "current: MCLoss() + EILoss(Rotate(n_trans=4)); buffer: MCLoss only",
+    "ER+EI": "current: MCLoss() + EILoss(Rotate(n_trans=4)); buffer: MCLoss() + EILoss(Rotate(n_trans=4))"
+  },
+  "n_train": 8,
+  "n_eval": 2,
+  "N_buf_grid": [
+    1,
+    2,
+    4,
+    8
+  ],
+  "deepinv_version": "0.3.5",
+  "elapsed_sec": 96485.34443736076,
+  "fgt_formula": "after_T1.PSNR_T1 - after_T2.PSNR_T1",
+  "fgt_definition": "Fgt = after_T1.PSNR_T1 - after_T2.PSNR_T1 on the T1 MRI test set only; T2 CT PSNR is logged separately and is not used in Fgt. Lower Fgt is better. Avg is appendix only.",
+  "rows": [
+    {
+      "arm": "Fine-tune",
+      "N_buf": 1,
+      "seed": 1,
+      "PSNR_T1": 20.519540786743164,
+      "PSNR_T2": 25.525888442993164,
+      "Avg": 23.022714614868164,
+      "Fgt": 4.576142311096191,
+      "arm_loss": "current: MCLoss() + EILoss(Rotate(n_trans=4)); no buffer replay"
+    },
+    {
+      "arm": "ER+MC",
+      "N_buf": 1,
+      "seed": 1,
+      "PSNR_T1": 21.494176864624023,
+      "PSNR_T2": 24.960529327392578,
+      "Avg": 23.2273530960083,
+      "Fgt": 3.601506233215332,
+      "arm_loss": "current: MCLoss() + EILoss(Rotate(n_trans=4)); buffer: MCLoss only"
+    },
+    {
+      "arm": "ER+EI",
+      "N_buf": 1,
+      "seed": 1,
+      "PSNR_T1": 24.382307052612305,
+      "PSNR_T2": 22.54515552520752,
+      "Avg": 23.463731288909912,
+      "Fgt": 0.7133760452270508,
+      "arm_loss": "current: MCLoss() + EILoss(Rotate(n_trans=4)); buffer: MCLoss() + EILoss(Rotate(n_trans=4))"
+    },
+    {
+      "arm": "Fine-tune",
+      "N_buf": 2,
+      "seed": 1,
+      "PSNR_T1": 20.519540786743164,
+      "PSNR_T2": 25.525888442993164,
+      "Avg": 23.022714614868164,
+      "Fgt": 4.576142311096191,
+      "arm_loss": "current: MCLoss() + EILoss(Rotate(n_trans=4)); no buffer replay"
+    },
+    {
+      "arm": "ER+MC",
+      "N_buf": 2,
+      "seed": 1,
+      "PSNR_T1": 24.402541160583496,
+      "PSNR_T2": 23.70792865753174,
+      "Avg": 24.055234909057617,
+      "Fgt": 0.6931419372558594,
+      "arm_loss": "current: MCLoss() + EILoss(Rotate(n_trans=4)); buffer: MCLoss only"
+    },
+    {
+      "arm": "ER+EI",
+      "N_buf": 2,
+      "seed": 1,
+      "PSNR_T1": 25.119765281677246,
+      "PSNR_T2": 24.814766883850098,
+      "Avg": 24.967266082763672,
+      "Fgt": -0.024082183837890625,
+      "arm_loss": "current: MCLoss() + EILoss(Rotate(n_trans=4)); buffer: MCLoss() + EILoss(Rotate(n_trans=4))"
+    },
+    {
+      "arm": "Fine-tune",
+      "N_buf": 4,
+      "seed": 1,
+      "PSNR_T1": 20.519540786743164,
+      "PSNR_T2": 25.525888442993164,
+      "Avg": 23.022714614868164,
+      "Fgt": 4.576142311096191,
+      "arm_loss": "current: MCLoss() + EILoss(Rotate(n_trans=4)); no buffer replay"
+    },
+    {
+      "arm": "ER+MC",
+      "N_buf": 4,
+      "seed": 1,
+      "PSNR_T1": 25.12693500518799,
+      "PSNR_T2": 25.26640033721924,
+      "Avg": 25.196667671203613,
+      "Fgt": -0.03125190734863281,
+      "arm_loss": "current: MCLoss() + EILoss(Rotate(n_trans=4)); buffer: MCLoss only"
+    },
+    {
+      "arm": "ER+EI",
+      "N_buf": 4,
+      "seed": 1,
+      "PSNR_T1": 24.988154411315918,
+      "PSNR_T2": 25.73110580444336,
+      "Avg": 25.35963010787964,
+      "Fgt": 0.1075286865234375,
+      "arm_loss": "current: MCLoss() + EILoss(Rotate(n_trans=4)); buffer: MCLoss() + EILoss(Rotate(n_trans=4))"
+    },
+    {
+      "arm": "Fine-tune",
+      "N_buf": 8,
+      "seed": 1,
+      "PSNR_T1": 20.519540786743164,
+      "PSNR_T2": 25.525888442993164,
+      "Avg": 23.022714614868164,
+      "Fgt": 4.576142311096191,
+      "arm_loss": "current: MCLoss() + EILoss(Rotate(n_trans=4)); no buffer replay"
+    },
+    {
+      "arm": "ER+MC",
+      "N_buf": 8,
+      "seed": 1,
+      "PSNR_T1": 25.138277053833008,
+      "PSNR_T2": 25.740458488464355,
+      "Avg": 25.43936777114868,
+      "Fgt": -0.042593955993652344,
+      "arm_loss": "current: MCLoss() + EILoss(Rotate(n_trans=4)); buffer: MCLoss only"
+    },
+    {
+      "arm": "ER+EI",
+      "N_buf": 8,
+      "seed": 1,
+      "PSNR_T1": 25.12766456604004,
+      "PSNR_T2": 24.71809482574463,
+      "Avg": 24.922879695892334,
+      "Fgt": -0.031981468200683594,
+      "arm_loss": "current: MCLoss() + EILoss(Rotate(n_trans=4)); buffer: MCLoss() + EILoss(Rotate(n_trans=4))"
+    },
+    {
+      "arm": "Fine-tune",
+      "N_buf": 1,
+      "seed": 2,
+      "PSNR_T1": 19.593039512634277,
+      "PSNR_T2": 27.160151481628418,
+      "Avg": 23.376595497131348,
+      "Fgt": 5.441677093505859,
+      "arm_loss": "current: MCLoss() + EILoss(Rotate(n_trans=4)); no buffer replay"
+    },
+    {
+      "arm": "ER+MC",
+      "N_buf": 1,
+      "seed": 2,
+      "PSNR_T1": 25.266374588012695,
+      "PSNR_T2": 24.566832542419434,
+      "Avg": 24.916603565216064,
+      "Fgt": -0.2316579818725586,
+      "arm_loss": "current: MCLoss() + EILoss(Rotate(n_trans=4)); buffer: MCLoss only"
+    },
+    {
+      "arm": "ER+EI",
+      "N_buf": 1,
+      "seed": 2,
+      "PSNR_T1": 25.259252548217773,
+      "PSNR_T2": 24.852030754089355,
+      "Avg": 25.055641651153564,
+      "Fgt": -0.22453594207763672,
+      "arm_loss": "current: MCLoss() + EILoss(Rotate(n_trans=4)); buffer: MCLoss() + EILoss(Rotate(n_trans=4))"
+    },
+    {
+      "arm": "Fine-tune",
+      "N_buf": 2,
+      "seed": 2,
+      "PSNR_T1": 19.593039512634277,
+      "PSNR_T2": 27.160151481628418,
+      "Avg": 23.376595497131348,
+      "Fgt": 5.441677093505859,
+      "arm_loss": "current: MCLoss() + EILoss(Rotate(n_trans=4)); no buffer replay"
+    },
+    {
+      "arm": "ER+MC",
+      "N_buf": 2,
+      "seed": 2,
+      "PSNR_T1": 25.427486419677734,
+      "PSNR_T2": 25.012706756591797,
+      "Avg": 25.220096588134766,
+      "Fgt": -0.39276981353759766,
+      "arm_loss": "current: MCLoss() + EILoss(Rotate(n_trans=4)); buffer: MCLoss only"
+    },
+    {
+      "arm": "ER+EI",
+      "N_buf": 2,
+      "seed": 2,
+      "PSNR_T1": 25.327275276184082,
+      "PSNR_T2": 25.093693733215332,
+      "Avg": 25.210484504699707,
+      "Fgt": -0.2925586700439453,
+      "arm_loss": "current: MCLoss() + EILoss(Rotate(n_trans=4)); buffer: MCLoss() + EILoss(Rotate(n_trans=4))"
+    },
+    {
+      "arm": "Fine-tune",
+      "N_buf": 4,
+      "seed": 2,
+      "PSNR_T1": 19.593039512634277,
+      "PSNR_T2": 27.160151481628418,
+      "Avg": 23.376595497131348,
+      "Fgt": 5.441677093505859,
+      "arm_loss": "current: MCLoss() + EILoss(Rotate(n_trans=4)); no buffer replay"
+    },
+    {
+      "arm": "ER+MC",
+      "N_buf": 4,
+      "seed": 2,
+      "PSNR_T1": 25.48310089111328,
+      "PSNR_T2": 25.166074752807617,
+      "Avg": 25.32458782196045,
+      "Fgt": -0.44838428497314453,
+      "arm_loss": "current: MCLoss() + EILoss(Rotate(n_trans=4)); buffer: MCLoss only"
+    },
+    {
+      "arm": "ER+EI",
+      "N_buf": 4,
+      "seed": 2,
+      "PSNR_T1": 25.2168025970459,
+      "PSNR_T2": 24.2804536819458,
+      "Avg": 24.74862813949585,
+      "Fgt": -0.18208599090576172,
+      "arm_loss": "current: MCLoss() + EILoss(Rotate(n_trans=4)); buffer: MCLoss() + EILoss(Rotate(n_trans=4))"
+    },
+    {
+      "arm": "Fine-tune",
+      "N_buf": 8,
+      "seed": 2,
+      "PSNR_T1": 19.593039512634277,
+      "PSNR_T2": 27.160151481628418,
+      "Avg": 23.376595497131348,
+      "Fgt": 5.441677093505859,
+      "arm_loss": "current: MCLoss() + EILoss(Rotate(n_trans=4)); no buffer replay"
+    },
+    {
+      "arm": "ER+MC",
+      "N_buf": 8,
+      "seed": 2,
+      "PSNR_T1": 25.572322845458984,
+      "PSNR_T2": 25.214767456054688,
+      "Avg": 25.393545150756836,
+      "Fgt": -0.5376062393188477,
+      "arm_loss": "current: MCLoss() + EILoss(Rotate(n_trans=4)); buffer: MCLoss only"
+    },
+    {
+      "arm": "ER+EI",
+      "N_buf": 8,
+      "seed": 2,
+      "PSNR_T1": 25.35895538330078,
+      "PSNR_T2": 24.731630325317383,
+      "Avg": 25.045292854309082,
+      "Fgt": -0.32423877716064453,
+      "arm_loss": "current: MCLoss() + EILoss(Rotate(n_trans=4)); buffer: MCLoss() + EILoss(Rotate(n_trans=4))"
+    },
+    {
+      "arm": "Fine-tune",
+      "N_buf": 1,
+      "seed": 3,
+      "PSNR_T1": 20.804150581359863,
+      "PSNR_T2": 25.080466270446777,
+      "Avg": 22.94230842590332,
+      "Fgt": 4.146550178527832,
+      "arm_loss": "current: MCLoss() + EILoss(Rotate(n_trans=4)); no buffer replay"
+    },
+    {
+      "arm": "ER+MC",
+      "N_buf": 1,
+      "seed": 3,
+      "PSNR_T1": 24.897953033447266,
+      "PSNR_T2": 25.53630256652832,
+      "Avg": 25.217127799987793,
+      "Fgt": 0.05274772644042969,
+      "arm_loss": "current: MCLoss() + EILoss(Rotate(n_trans=4)); buffer: MCLoss only"
+    },
+    {
+      "arm": "ER+EI",
+      "N_buf": 1,
+      "seed": 3,
+      "PSNR_T1": 24.84313201904297,
+      "PSNR_T2": 22.89799690246582,
+      "Avg": 23.870564460754395,
+      "Fgt": 0.10756874084472656,
+      "arm_loss": "current: MCLoss() + EILoss(Rotate(n_trans=4)); buffer: MCLoss() + EILoss(Rotate(n_trans=4))"
+    },
+    {
+      "arm": "Fine-tune",
+      "N_buf": 2,
+      "seed": 3,
+      "PSNR_T1": 20.804150581359863,
+      "PSNR_T2": 25.080466270446777,
+      "Avg": 22.94230842590332,
+      "Fgt": 4.146550178527832,
+      "arm_loss": "current: MCLoss() + EILoss(Rotate(n_trans=4)); no buffer replay"
+    },
+    {
+      "arm": "ER+MC",
+      "N_buf": 2,
+      "seed": 3,
+      "PSNR_T1": 25.122305870056152,
+      "PSNR_T2": 24.053844451904297,
+      "Avg": 24.588075160980225,
+      "Fgt": -0.17160511016845703,
+      "arm_loss": "current: MCLoss() + EILoss(Rotate(n_trans=4)); buffer: MCLoss only"
+    },
+    {
+      "arm": "ER+EI",
+      "N_buf": 2,
+      "seed": 3,
+      "PSNR_T1": 24.709108352661133,
+      "PSNR_T2": 21.108776092529297,
+      "Avg": 22.908942222595215,
+      "Fgt": 0.2415924072265625,
+      "arm_loss": "current: MCLoss() + EILoss(Rotate(n_trans=4)); buffer: MCLoss() + EILoss(Rotate(n_trans=4))"
+    }
+  ],
+  "aggregate_fgt": [
+    {
+      "arm": "ER+EI",
+      "N_buf": 1,
+      "n_seeds": 3,
+      "Fgt_mean": 0.19880294799804688,
+      "Fgt_std": 0.47556543650545957,
+      "Fgt_sem": 0.274567832783709,
+      "Fgt_values": [
+        0.7133760452270508,
+        -0.22453594207763672,
+        0.10756874084472656
+      ]
+    },
+    {
+      "arm": "ER+MC",
+      "N_buf": 1,
+      "n_seeds": 3,
+      "Fgt_mean": 1.1408653259277344,
+      "Fgt_std": 2.135716954021085,
+      "Fgt_sem": 1.2330567583169212,
+      "Fgt_values": [
+        3.601506233215332,
+        -0.2316579818725586,
+        0.05274772644042969
+      ]
+    },
+    {
+      "arm": "Fine-tune",
+      "N_buf": 1,
+      "n_seeds": 3,
+      "Fgt_mean": 4.721456527709961,
+      "Fgt_std": 0.6596784047076885,
+      "Fgt_sem": 0.38086550453656687,
+      "Fgt_values": [
+        4.576142311096191,
+        5.441677093505859,
+        4.146550178527832
+      ]
+    },
+    {
+      "arm": "ER+EI",
+      "N_buf": 2,
+      "n_seeds": 3,
+      "Fgt_mean": -0.025016148885091145,
+      "Fgt_std": 0.26707676341333597,
+      "Fgt_sem": 0.1541968412509835,
+      "Fgt_values": [
+        -0.024082183837890625,
+        -0.2925586700439453,
+        0.2415924072265625
+      ]
+    },
+    {
+      "arm": "ER+MC",
+      "N_buf": 2,
+      "n_seeds": 3,
+      "Fgt_mean": 0.0429223378499349,
+      "Fgt_std": 0.573862006141538,
+      "Fgt_sem": 0.33131938372351566,
+      "Fgt_values": [
+        0.6931419372558594,
+        -0.39276981353759766,
+        -0.17160511016845703
+      ]
+    },
+    {
+      "arm": "Fine-tune",
+      "N_buf": 2,
+      "n_seeds": 3,
+      "Fgt_mean": 4.721456527709961,
+      "Fgt_std": 0.6596784047076885,
+      "Fgt_sem": 0.38086550453656687,
+      "Fgt_values": [
+        4.576142311096191,
+        5.441677093505859,
+        4.146550178527832
+      ]
+    },
+    {
+      "arm": "ER+EI",
+      "N_buf": 4,
+      "n_seeds": 2,
+      "Fgt_mean": -0.03727865219116211,
+      "Fgt_std": 0.20478850234134133,
+      "Fgt_sem": 0.1448073387145996,
+      "Fgt_values": [
+        0.1075286865234375,
+        -0.18208599090576172
+      ]
+    },
+    {
+      "arm": "ER+MC",
+      "N_buf": 4,
+      "n_seeds": 2,
+      "Fgt_mean": -0.23981809616088867,
+      "Fgt_std": 0.2949571328707599,
+      "Fgt_sem": 0.20856618881225583,
+      "Fgt_values": [
+        -0.03125190734863281,
+        -0.44838428497314453
+      ]
+    },
+    {
+      "arm": "Fine-tune",
+      "N_buf": 4,
+      "n_seeds": 2,
+      "Fgt_mean": 5.008909702301025,
+      "Fgt_std": 0.6120255139946991,
+      "Fgt_sem": 0.43276739120483393,
+      "Fgt_values": [
+        4.576142311096191,
+        5.441677093505859
+      ]
+    },
+    {
+      "arm": "ER+EI",
+      "N_buf": 8,
+      "n_seeds": 2,
+      "Fgt_mean": -0.17811012268066406,
+      "Fgt_std": 0.20665712501692032,
+      "Fgt_sem": 0.14612865447998047,
+      "Fgt_values": [
+        -0.031981468200683594,
+        -0.32423877716064453
+      ]
+    },
+    {
+      "arm": "ER+MC",
+      "N_buf": 8,
+      "n_seeds": 2,
+      "Fgt_mean": -0.29010009765625,
+      "Fgt_std": 0.35002654230988217,
+      "Fgt_sem": 0.24750614166259766,
+      "Fgt_values": [
+        -0.042593955993652344,
+        -0.5376062393188477
+      ]
+    },
+    {
+      "arm": "Fine-tune",
+      "N_buf": 8,
+      "n_seeds": 2,
+      "Fgt_mean": 5.008909702301025,
+      "Fgt_std": 0.6120255139946991,
+      "Fgt_sem": 0.43276739120483393,
+      "Fgt_values": [
+        4.576142311096191,
+        5.441677093505859
+      ]
+    }
+  ],
+  "appendix_avg": [
+    {
+      "arm": "ER+EI",
+      "N_buf": 1,
+      "n_seeds": 3,
+      "Avg_mean": 24.129979133605957,
+      "Avg_std": 0.8270529787883552,
+      "Avg_values": [
+        23.463731288909912,
+        25.055641651153564,
+        23.870564460754395
+      ]
+    },
+    {
+      "arm": "ER+MC",
+      "N_buf": 1,
+      "n_seeds": 3,
+      "Avg_mean": 24.453694820404053,
+      "Avg_std": 1.0726202602350672,
+      "Avg_values": [
+        23.2273530960083,
+        24.916603565216064,
+        25.217127799987793
+      ]
+    },
+    {
+      "arm": "Fine-tune",
+      "N_buf": 1,
+      "n_seeds": 3,
+      "Avg_mean": 23.11387284596761,
+      "Avg_std": 0.23104909084832928,
+      "Avg_values": [
+        23.022714614868164,
+        23.376595497131348,
+        22.94230842590332
+      ]
+    },
+    {
+      "arm": "ER+EI",
+      "N_buf": 2,
+      "n_seeds": 3,
+      "Avg_mean": 24.3622309366862,
+      "Avg_std": 1.264446465877631,
+      "Avg_values": [
+        24.967266082763672,
+        25.210484504699707,
+        22.908942222595215
+      ]
+    },
+    {
+      "arm": "ER+MC",
+      "N_buf": 2,
+      "n_seeds": 3,
+      "Avg_mean": 24.6211355527242,
+      "Avg_std": 0.5831341397760101,
+      "Avg_values": [
+        24.055234909057617,
+        25.220096588134766,
+        24.588075160980225
+      ]
+    },
+    {
+      "arm": "Fine-tune",
+      "N_buf": 2,
+      "n_seeds": 3,
+      "Avg_mean": 23.11387284596761,
+      "Avg_std": 0.23104909084832928,
+      "Avg_values": [
+        23.022714614868164,
+        23.376595497131348,
+        22.94230842590332
+      ]
+    },
+    {
+      "arm": "ER+EI",
+      "N_buf": 4,
+      "n_seeds": 2,
+      "Avg_mean": 25.054129123687744,
+      "Avg_std": 0.43204363516250577,
+      "Avg_values": [
+        25.35963010787964,
+        24.74862813949585
+      ]
+    },
+    {
+      "arm": "ER+MC",
+      "N_buf": 4,
+      "n_seeds": 2,
+      "Avg_mean": 25.26062774658203,
+      "Avg_std": 0.09045320605056416,
+      "Avg_values": [
+        25.196667671203613,
+        25.32458782196045
+      ]
+    },
+    {
+      "arm": "Fine-tune",
+      "N_buf": 4,
+      "n_seeds": 2,
+      "Avg_mean": 23.199655055999756,
+      "Avg_std": 0.25023157158057535,
+      "Avg_values": [
+        23.022714614868164,
+        23.376595497131348
+      ]
+    },
+    {
+      "arm": "ER+EI",
+      "N_buf": 8,
+      "n_seeds": 2,
+      "Avg_mean": 24.984086275100708,
+      "Avg_std": 0.08655917442294564,
+      "Avg_values": [
+        24.922879695892334,
+        25.045292854309082
+      ]
+    },
+    {
+      "arm": "ER+MC",
+      "N_buf": 8,
+      "n_seeds": 2,
+      "Avg_mean": 25.41645646095276,
+      "Avg_std": 0.03240148561081107,
+      "Avg_values": [
+        25.43936777114868,
+        25.393545150756836
+      ]
+    },
+    {
+      "arm": "Fine-tune",
+      "N_buf": 8,
+      "n_seeds": 2,
+      "Avg_mean": 23.199655055999756,
+      "Avg_std": 0.25023157158057535,
+      "Avg_values": [
+        23.022714614868164,
+        23.376595497131348
+      ]
+    }
+  ],
+  "failed_cells": [],
+  "go_kill": {
+    "verdict": "KILL",
+    "reason": "After multi-seed, ER+EI is not stably better than ER+MC on Fgt (0/3 seeds with a majority of N points; need \u22652/3).",
+    "rule": "Go: \u22652/3 seeds where on a majority of N_buf points Fgt(ER+EI)<Fgt(ER+MC). Kill: EI not stably better than MC on Fgt.",
+    "per_seed": [
+      {
+        "seed": 1,
+        "n_points": 4,
+        "n_EI_better_than_MC": 2,
+        "majority": false,
+        "points": [
+          {
+            "N_buf": 1,
+            "Fgt_ER+EI": 0.7133760452270508,
+            "Fgt_ER+MC": 3.601506233215332,
+            "Fgt_Fine-tune": 4.576142311096191,
+            "ER+EI_better": true,
+            "delta_MC_minus_EI": 2.8881301879882812
+          },
+          {
+            "N_buf": 2,
+            "Fgt_ER+EI": -0.024082183837890625,
+            "Fgt_ER+MC": 0.6931419372558594,
+            "Fgt_Fine-tune": 4.576142311096191,
+            "ER+EI_better": true,
+            "delta_MC_minus_EI": 0.71722412109375
+          },
+          {
+            "N_buf": 4,
+            "Fgt_ER+EI": 0.1075286865234375,
+            "Fgt_ER+MC": -0.03125190734863281,
+            "Fgt_Fine-tune": 4.576142311096191,
+            "ER+EI_better": false,
+            "delta_MC_minus_EI": -0.1387805938720703
+          },
+          {
+            "N_buf": 8,
+            "Fgt_ER+EI": -0.031981468200683594,
+            "Fgt_ER+MC": -0.042593955993652344,
+            "Fgt_Fine-tune": 4.576142311096191,
+            "ER+EI_better": false,
+            "delta_MC_minus_EI": -0.01061248779296875
+          }
+        ]
+      },
+      {
+        "seed": 2,
+        "n_points": 4,
+        "n_EI_better_than_MC": 0,
+        "majority": false,
+        "points": [
+          {
+            "N_buf": 1,
+            "Fgt_ER+EI": -0.22453594207763672,
+            "Fgt_ER+MC": -0.2316579818725586,
+            "Fgt_Fine-tune": 5.441677093505859,
+            "ER+EI_better": false,
+            "delta_MC_minus_EI": -0.007122039794921875
+          },
+          {
+            "N_buf": 2,
+            "Fgt_ER+EI": -0.2925586700439453,
+            "Fgt_ER+MC": -0.39276981353759766,
+            "Fgt_Fine-tune": 5.441677093505859,
+            "ER+EI_better": false,
+            "delta_MC_minus_EI": -0.10021114349365234
+          },
+          {
+            "N_buf": 4,
+            "Fgt_ER+EI": -0.18208599090576172,
+            "Fgt_ER+MC": -0.44838428497314453,
+            "Fgt_Fine-tune": 5.441677093505859,
+            "ER+EI_better": false,
+            "delta_MC_minus_EI": -0.2662982940673828
+          },
+          {
+            "N_buf": 8,
+            "Fgt_ER+EI": -0.32423877716064453,
+            "Fgt_ER+MC": -0.5376062393188477,
+            "Fgt_Fine-tune": 5.441677093505859,
+            "ER+EI_better": false,
+            "delta_MC_minus_EI": -0.21336746215820312
+          }
+        ]
+      },
+      {
+        "seed": 3,
+        "n_points": 2,
+        "n_EI_better_than_MC": 0,
+        "majority": false,
+        "points": [
+          {
+            "N_buf": 1,
+            "Fgt_ER+EI": 0.10756874084472656,
+            "Fgt_ER+MC": 0.05274772644042969,
+            "Fgt_Fine-tune": 4.146550178527832,
+            "ER+EI_better": false,
+            "delta_MC_minus_EI": -0.054821014404296875
+          },
+          {
+            "N_buf": 2,
+            "Fgt_ER+EI": 0.2415924072265625,
+            "Fgt_ER+MC": -0.17160511016845703,
+            "Fgt_Fine-tune": 4.146550178527832,
+            "ER+EI_better": false,
+            "delta_MC_minus_EI": -0.41319751739501953
+          }
+        ]
+      }
+    ],
+    "majority_seeds": [],
+    "n_majority_seeds": 0,
+    "seeds_observed": [
+      1,
+      2,
+      3
+    ],
+    "n_buf_observed": [
+      1,
+      2,
+      4,
+      8
+    ],
+    "grid_complete": true,
+    "tiny": false,
+    "primary": "Fgt on T1 MRI test (after_T1.PSNR_T1 - after_T2.PSNR_T1)",
+    "secondary": "Avg is appendix only"
+  }
+}

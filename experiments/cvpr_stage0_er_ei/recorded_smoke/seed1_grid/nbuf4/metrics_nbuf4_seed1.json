@@ -1,0 +1,147 @@
+{
+  "config": {
+    "seed": 1,
+    "N_buf": 4,
+    "arms": [
+      "finetune",
+      "er_mc",
+      "er_ei"
+    ],
+    "tiny": false,
+    "epochs": 150,
+    "max_batch_steps": 1000000000,
+    "device": "cpu",
+    "backbone": "deepinv.models.MoDL",
+    "losses_current": "MCLoss() + EILoss(Rotate(n_trans=4))",
+    "physics": "deepinv.physics.MRI + GaussianMaskGenerator (4x then 8x)"
+  },
+  "rows": [
+    {
+      "arm": "Fine-tune",
+      "N_buf": 4,
+      "seed": 1,
+      "PSNR_T1": 28.45817470550537,
+      "PSNR_T2": 26.22411060333252,
+      "Avg": 27.341142654418945,
+      "Fgt": -1.8329706192016602
+    },
+    {
+      "arm": "ER+MC",
+      "N_buf": 4,
+      "seed": 1,
+      "PSNR_T1": 29.580368995666504,
+      "PSNR_T2": 26.691216468811035,
+      "Avg": 28.13579273223877,
+      "Fgt": -2.955164909362793
+    },
+    {
+      "arm": "ER+EI",
+      "N_buf": 4,
+      "seed": 1,
+      "PSNR_T1": 29.25180435180664,
+      "PSNR_T2": 26.704883575439453,
+      "Avg": 27.978343963623047,
+      "Fgt": -2.6266002655029297
+    }
+  ],
+  "details": [
+    {
+      "row": {
+        "arm": "Fine-tune",
+        "N_buf": 4,
+        "seed": 1,
+        "PSNR_T1": 28.45817470550537,
+        "PSNR_T2": 26.22411060333252,
+        "Avg": 27.341142654418945,
+        "Fgt": -1.8329706192016602
+      },
+      "after_T1": {
+        "PSNR_T1": 26.62520408630371,
+        "PSNR_T2": 24.927661895751953
+      },
+      "after_T2": {
+        "PSNR_T1": 28.45817470550537,
+        "PSNR_T2": 26.22411060333252,
+        "Avg": 27.341142654418945,
+        "Fgt": -1.8329706192016602
+      },
+      "buffer_size": 2,
+      "buffer_capacity": 4,
+      "arm": "finetune",
+      "n_train": 2,
+      "device": "cpu"
+    },
+    {
+      "row": {
+        "arm": "ER+MC",
+        "N_buf": 4,
+        "seed": 1,
+        "PSNR_T1": 29.580368995666504,
+        "PSNR_T2": 26.691216468811035,
+        "Avg": 28.13579273223877,
+        "Fgt": -2.955164909362793
+      },
+      "after_T1": {
+        "PSNR_T1": 26.62520408630371,
+        "PSNR_T2": 24.927661895751953
+      },
+      "after_T2": {
+        "PSNR_T1": 29.580368995666504,
+        "PSNR_T2": 26.691216468811035,
+        "Avg": 28.13579273223877,
+        "Fgt": -2.955164909362793
+      },
+      "buffer_size": 2,
+      "buffer_capacity": 4,
+      "arm": "er_mc",
+      "n_train": 2,
+      "device": "cpu"
+    },
+    {
+      "row": {
+        "arm": "ER+EI",
+        "N_buf": 4,
+        "seed": 1,
+        "PSNR_T1": 29.25180435180664,
+        "PSNR_T2": 26.704883575439453,
+        "Avg": 27.978343963623047,
+        "Fgt": -2.6266002655029297
+      },
+      "after_T1": {
+        "PSNR_T1": 26.62520408630371,
+        "PSNR_T2": 24.927661895751953
+      },
+      "after_T2": {
+        "PSNR_T1": 29.25180435180664,
+        "PSNR_T2": 26.704883575439453,
+        "Avg": 27.978343963623047,
+        "Fgt": -2.6266002655029297
+      },
+      "buffer_size": 2,
+      "buffer_capacity": 4,
+      "arm": "er_ei",
+      "n_train": 2,
+      "device": "cpu"
+    }
+  ],
+  "go_kill": {
+    "verdict": "INCONCLUSIVE",
+    "reason": "ER+EI Fgt is not better than ER+MC on the N_buf values that were run; run N_buf=4 to apply the kill rule on both N.",
+    "comparisons": [
+      {
+        "N_buf": 4,
+        "Fgt_ER+EI": -2.6266002655029297,
+        "Fgt_ER+MC": -2.955164909362793,
+        "Fgt_Fine-tune": -1.8329706192016602,
+        "ER+EI_better_Fgt_than_ER+MC": false,
+        "delta_Fgt_MC_minus_EI": -0.3285646438598633
+      }
+    ],
+    "n_buf_observed": [
+      4
+    ],
+    "grid_complete": false,
+    "note": "Go/kill is defined on Fgt after T2 (lower is better). Tiny CPU smokes verify the pipeline; they are not a science decision."
+  },
+  "fgt_definition": "Fgt = PSNR_T1_after_T1 - PSNR_T1_after_T2; Avg = 0.5 * (PSNR_T1_after_T2 + PSNR_T2_after_T2). CSV PSNR_T1/PSNR_T2 are after T2."
+}

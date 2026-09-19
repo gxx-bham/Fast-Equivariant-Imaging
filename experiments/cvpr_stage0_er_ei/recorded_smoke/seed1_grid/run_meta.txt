@@ -1,0 +1,8 @@
+device=cpu
+epochs=150
+tiny=false
+seed=1
+n_buf_grid=1,4
+start_utc=2026-09-15T11:06:05Z
+end_utc=2026-09-15T11:36:09Z
+elapsed_sec=1804

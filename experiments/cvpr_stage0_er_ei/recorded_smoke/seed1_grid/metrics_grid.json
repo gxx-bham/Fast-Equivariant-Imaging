@@ -1,0 +1,92 @@
+{
+  "device": "cpu",
+  "seed": 1,
+  "epochs": 150,
+  "tiny": false,
+  "max_batch_steps": 1000000000,
+  "elapsed_sec": 1802.164793729782,
+  "rows": [
+    {
+      "arm": "Fine-tune",
+      "N_buf": 1,
+      "seed": 1,
+      "PSNR_T1": 28.45817470550537,
+      "PSNR_T2": 26.22411060333252,
+      "Avg": 27.341142654418945,
+      "Fgt": -1.8329706192016602
+    },
+    {
+      "arm": "ER+MC",
+      "N_buf": 1,
+      "seed": 1,
+      "PSNR_T1": 29.472318649291992,
+      "PSNR_T2": 26.63976287841797,
+      "Avg": 28.05604076385498,
+      "Fgt": -2.8471145629882812
+    },
+    {
+      "arm": "ER+EI",
+      "N_buf": 1,
+      "seed": 1,
+      "PSNR_T1": 29.19024085998535,
+      "PSNR_T2": 26.553507804870605,
+      "Avg": 27.87187433242798,
+      "Fgt": -2.5650367736816406
+    },
+    {
+      "arm": "Fine-tune",
+      "N_buf": 4,
+      "seed": 1,
+      "PSNR_T1": 28.45817470550537,
+      "PSNR_T2": 26.22411060333252,
+      "Avg": 27.341142654418945,
+      "Fgt": -1.8329706192016602
+    },
+    {
+      "arm": "ER+MC",
+      "N_buf": 4,
+      "seed": 1,
+      "PSNR_T1": 29.580368995666504,
+      "PSNR_T2": 26.691216468811035,
+      "Avg": 28.13579273223877,
+      "Fgt": -2.955164909362793
+    },
+    {
+      "arm": "ER+EI",
+      "N_buf": 4,
+      "seed": 1,
+      "PSNR_T1": 29.25180435180664,
+      "PSNR_T2": 26.704883575439453,
+      "Avg": 27.978343963623047,
+      "Fgt": -2.6266002655029297
+    }
+  ],
+  "go_kill": {
+    "verdict": "KILL",
+    "reason": "ER+EI Fgt is not better than ER+MC at both N_buf=1 and N_buf=4.",
+    "comparisons": [
+      {
+        "N_buf": 1,
+        "Fgt_ER+EI": -2.5650367736816406,
+        "Fgt_ER+MC": -2.8471145629882812,
+        "Fgt_Fine-tune": -1.8329706192016602,
+        "ER+EI_better_Fgt_than_ER+MC": false,
+        "delta_Fgt_MC_minus_EI": -0.2820777893066406
+      },
+      {
+        "N_buf": 4,
+        "Fgt_ER+EI": -2.6266002655029297,
+        "Fgt_ER+MC": -2.955164909362793,
+        "Fgt_Fine-tune": -1.8329706192016602,
+        "ER+EI_better_Fgt_than_ER+MC": false,
+        "delta_Fgt_MC_minus_EI": -0.3285646438598633
+      }
+    ],
+    "n_buf_observed": [
+      1,
+      4
+    ],
+    "grid_complete": true,
+    "note": "Go/kill is defined on Fgt after T2 (lower is better). Tiny CPU smokes verify the pipeline; they are not a science decision."
+  }
+}

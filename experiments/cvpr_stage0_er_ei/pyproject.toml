@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cvpr-stage0-er-ei"
+version = "0.1.0"
+description = "Isolated CVPR stage-0 operator-incremental unsupervised MRI recon smoke. Composes deepinv (MoDL + MCLoss/EILoss), not Fast Equivariant Imaging plugins."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "GPL-3.0-only" }
+dependencies = [
+    "torch>=2.2",
+    "torchvision",
+    "deepinv==0.3.5",
+    "numpy",
+]
+
+[project.scripts]
+cvpr-stage0-smoke = "cvpr_stage0_er_ei.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["cvpr_stage0_er_ei*"]

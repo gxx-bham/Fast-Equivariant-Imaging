@@ -1,0 +1,508 @@
+{
+  "label": "light-UNet HARDEN n_eval=32 N_buf=1 seeds 1-3",
+  "not_modl": true,
+  "separate_from": [
+    "recorded_smoke/light_unet_s1_seeds/",
+    "recorded_smoke/stage1_crossip_grid/"
+  ],
+  "do_not_merge_with_neval2": true,
+  "backbone": {
+    "kind": "unet",
+    "class": "deepinv.models.UNet",
+    "ctor_kwargs": {
+      "in_channels": 2,
+      "out_channels": 2,
+      "residual": true,
+      "circular_padding": false,
+      "cat": true,
+      "bias": true,
+      "batch_norm": true,
+      "scales": 3
+    },
+    "wrapper_class": "deepinv.models.ArtifactRemoval",
+    "wrapper_ctor_kwargs": {
+      "mode": "adjoint"
+    },
+    "runtime_class": "ArtifactRemoval",
+    "runtime_denoiser_class": "UNet",
+    "n_parameters": 2070082
+  },
+  "supervised": false,
+  "unsupervised": true,
+  "cross_ip": true,
+  "physics_class_t1": "deepinv.physics.MRI",
+  "physics_class_t2": "deepinv.physics.Tomography",
+  "ct_n_angles": 40,
+  "n_buf": 1,
+  "seeds": [
+    1,
+    2,
+    3
+  ],
+  "seeds_present": [
+    1,
+    2,
+    3
+  ],
+  "missing_seeds": [],
+  "arms": [
+    "finetune",
+    "er_mc",
+    "er_ei"
+  ],
+  "ei": "EILoss(Rotate(n_trans=4))",
+  "n_train": 8,
+  "n_eval": 32,
+  "epochs_t1": 80,
+  "epochs_t2": 160,
+  "tiny": false,
+  "expand_n_buf": false,
+  "fgt_formula": "after_T1.PSNR_T1 - after_T2.PSNR_T1",
+  "fgt_definition": "Fgt = after_T1.PSNR_T1 - after_T2.PSNR_T1 on the T1 MRI test set only; T2 CT PSNR is logged separately and is not used in Fgt. Lower Fgt is better.",
+  "rows": [
+    {
+      "arm": "Fine-tune",
+      "N_buf": 1,
+      "seed": 1,
+      "PSNR_T1": -3.724149903282523,
+      "PSNR_T2": 16.201790869235992,
+      "Avg": 6.238820482976735,
+      "Fgt": 28.292928179726005,
+      "arm_loss": "current: MCLoss() + EILoss(Rotate(n_trans=4)); no buffer replay"
+    },
+    {
+      "arm": "ER+MC",
+      "N_buf": 1,
+      "seed": 1,
+      "PSNR_T1": 18.824904918670654,
+      "PSNR_T2": 17.190985769033432,
+      "Avg": 18.007945343852043,
+      "Fgt": 5.743873357772827,
+      "arm_loss": "current: MCLoss() + EILoss(Rotate(n_trans=4)); buffer: MCLoss only"
+    },
+    {
+      "arm": "ER+EI",
+      "N_buf": 1,
+      "seed": 1,
+      "PSNR_T1": 23.500895261764526,
+      "PSNR_T2": 19.138923943042755,
+      "Avg": 21.31990960240364,
+      "Fgt": 1.067883014678955,
+      "arm_loss": "current: MCLoss() + EILoss(Rotate(n_trans=4)); buffer: MCLoss() + EILoss(Rotate(n_trans=4))"
+    },
+    {
+      "arm": "Fine-tune",
+      "N_buf": 1,
+      "seed": 2,
+      "PSNR_T1": 12.998830407857895,
+      "PSNR_T2": 10.712961092591286,
+      "Avg": 11.85589575022459,
+      "Fgt": 11.739291042089462,
+      "arm_loss": "current: MCLoss() + EILoss(Rotate(n_trans=4)); no buffer replay"
+    },
+    {
+      "arm": "ER+MC",
+      "N_buf": 1,
+      "seed": 2,
+      "PSNR_T1": 23.59572011232376,
+      "PSNR_T2": 18.340829014778137,
+      "Avg": 20.96827456355095,
+      "Fgt": 1.1424013376235962,
+      "arm_loss": "current: MCLoss() + EILoss(Rotate(n_trans=4)); buffer: MCLoss only"
+    },
+    {
+      "arm": "ER+EI",
+      "N_buf": 1,
+      "seed": 2,
+      "PSNR_T1": 24.38420283794403,
+      "PSNR_T2": 19.147178202867508,
+      "Avg": 21.76569052040577,
+      "Fgt": 0.3539186120033264,
+      "arm_loss": "current: MCLoss() + EILoss(Rotate(n_trans=4)); buffer: MCLoss() + EILoss(Rotate(n_trans=4))"
+    },
+    {
+      "arm": "Fine-tune",
+      "N_buf": 1,
+      "seed": 3,
+      "PSNR_T1": 10.91469857096672,
+      "PSNR_T2": 17.559559017419815,
+      "Avg": 14.237128794193268,
+      "Fgt": 13.457971006631851,
+      "arm_loss": "current: MCLoss() + EILoss(Rotate(n_trans=4)); no buffer replay"
+    },
+    {
+      "arm": "ER+MC",
+      "N_buf": 1,
+      "seed": 3,
+      "PSNR_T1": 21.826296091079712,
+      "PSNR_T2": 18.502342760562897,
+      "Avg": 20.164319425821304,
+      "Fgt": 2.54637348651886,
+      "arm_loss": "current: MCLoss() + EILoss(Rotate(n_trans=4)); buffer: MCLoss only"
+    },
+    {
+      "arm": "ER+EI",
+      "N_buf": 1,
+      "seed": 3,
+      "PSNR_T1": 23.764356791973114,
+      "PSNR_T2": 18.481699526309967,
+      "Avg": 21.12302815914154,
+      "Fgt": 0.6083127856254578,
+      "arm_loss": "current: MCLoss() + EILoss(Rotate(n_trans=4)); buffer: MCLoss() + EILoss(Rotate(n_trans=4))"
+    }
+  ],
+  "aggregate_fgt": [
+    {
+      "arm": "ER+EI",
+      "N_buf": 1,
+      "n_seeds": 3,
+      "Fgt_mean": 0.6767048041025797,
+      "Fgt_std": 0.361862395415057,
+      "Fgt_sem": 0.20892135140248597,
+      "Fgt_values": [
+        1.067883014678955,
+        0.3539186120033264,
+        0.6083127856254578
+      ]
+    },
+    {
+      "arm": "ER+MC",
+      "N_buf": 1,
+      "n_seeds": 3,
+      "Fgt_mean": 3.1442160606384277,
+      "Fgt_std": 2.3582722479871774,
+      "Fgt_sem": 1.361549117197821,
+      "Fgt_values": [
+        5.743873357772827,
+        1.1424013376235962,
+        2.54637348651886
+      ]
+    },
+    {
+      "arm": "Fine-tune",
+      "N_buf": 1,
+      "n_seeds": 3,
+      "Fgt_mean": 17.830063409482438,
+      "Fgt_std": 9.101764642388463,
+      "Fgt_sem": 5.254906266383598,
+      "Fgt_values": [
+        28.292928179726005,
+        11.739291042089462,
+        13.457971006631851
+      ]
+    }
+  ],
+  "appendix_avg": [
+    {
+      "arm": "ER+EI",
+      "N_buf": 1,
+      "n_seeds": 3,
+      "Avg_mean": 21.40287609398365,
+      "Avg_std": 0.329266315754057,
+      "Avg_values": [
+        21.31990960240364,
+        21.76569052040577,
+        21.12302815914154
+      ]
+    },
+    {
+      "arm": "ER+MC",
+      "N_buf": 1,
+      "n_seeds": 3,
+      "Avg_mean": 19.713513111074764,
+      "Avg_std": 1.530786406495792,
+      "Avg_values": [
+        18.007945343852043,
+        20.96827456355095,
+        20.164319425821304
+      ]
+    },
+    {
+      "arm": "Fine-tune",
+      "N_buf": 1,
+      "n_seeds": 3,
+      "Avg_mean": 10.777281675798198,
+      "Avg_std": 4.1067980473212815,
+      "Avg_values": [
+        6.238820482976735,
+        11.85589575022459,
+        14.237128794193268
+      ]
+    }
+  ],
+  "go_kill": {
+    "verdict": "GO",
+    "reason": "3/3 seeds have Fgt(ER+EI)<Fgt(ER+MC) and mean(Fgt_MC\u2212Fgt_EI)=2.468>0 (seeds [1, 2, 3]).",
+    "rule": "GO: \u22652/3 seeds with Fgt(ER+EI)<Fgt(ER+MC) AND mean(Fgt_MC\u2212Fgt_EI)>0. Kill: \u22652/3 seeds EI does not win, OR mean \u0394\u22640.",
+    "per_seed": [
+      {
+        "seed": 1,
+        "Fgt_Fine-tune": 28.292928179726005,
+        "Fgt_ER+MC": 5.743873357772827,
+        "Fgt_ER+EI": 1.067883014678955,
+        "ER+EI_better": true,
+        "delta_MC_minus_EI": 4.675990343093872
+      },
+      {
+        "seed": 2,
+        "Fgt_Fine-tune": 11.739291042089462,
+        "Fgt_ER+MC": 1.1424013376235962,
+        "Fgt_ER+EI": 0.3539186120033264,
+        "ER+EI_better": true,
+        "delta_MC_minus_EI": 0.7884827256202698
+      },
+      {
+        "seed": 3,
+        "Fgt_Fine-tune": 13.457971006631851,
+        "Fgt_ER+MC": 2.54637348651886,
+        "Fgt_ER+EI": 0.6083127856254578,
+        "ER+EI_better": true,
+        "delta_MC_minus_EI": 1.938060700893402
+      }
+    ],
+    "win_seeds": [
+      1,
+      2,
+      3
+    ],
+    "n_win_seeds": 3,
+    "mean_delta_MC_minus_EI": 2.467511256535848,
+    "seeds_observed": [
+      1,
+      2,
+      3
+    ],
+    "grid_complete": true,
+    "n_train": 8,
+    "n_eval": 32,
+    "N_buf": 1,
+    "primary": "Fgt on T1 MRI test (after_T1.PSNR_T1 - after_T2.PSNR_T1)",
+    "do_not_merge_with": "recorded_smoke/light_unet_s1_seeds/ (n_eval=2)"
+  },
+  "reviewer_by_seed": {
+    "1": {
+      "Fine-tune": {
+        "pass": true,
+        "physics_class_t2": "deepinv.physics.Tomography",
+        "ct_n_angles": 40,
+        "n_angles_40": true,
+        "replay_rebuilds_mri": true,
+        "BufferReplayLoss_nonzero": null,
+        "replay_physics_class": null,
+        "n_distinct_ya": 1,
+        "n_eval": 32,
+        "backbone_class": "deepinv.models.UNet",
+        "backbone_ctor_kwargs": {
+          "in_channels": 2,
+          "out_channels": 2,
+          "residual": true,
+          "circular_padding": false,
+          "cat": true,
+          "bias": true,
+          "batch_norm": true,
+          "scales": 3
+        },
+        "backbone_wrapper_class": "deepinv.models.ArtifactRemoval",
+        "arm_loss": "current: MCLoss() + EILoss(Rotate(n_trans=4)); no buffer replay"
+      },
+      "ER+MC": {
+        "pass": true,
+        "physics_class_t2": "deepinv.physics.Tomography",
+        "ct_n_angles": 40,
+        "n_angles_40": true,
+        "replay_rebuilds_mri": true,
+        "BufferReplayLoss_nonzero": true,
+        "replay_physics_class": "deepinv.physics.MRI",
+        "n_distinct_ya": 1,
+        "n_eval": 32,
+        "backbone_class": "deepinv.models.UNet",
+        "backbone_ctor_kwargs": {
+          "in_channels": 2,
+          "out_channels": 2,
+          "residual": true,
+          "circular_padding": false,
+          "cat": true,
+          "bias": true,
+          "batch_norm": true,
+          "scales": 3
+        },
+        "backbone_wrapper_class": "deepinv.models.ArtifactRemoval",
+        "arm_loss": "current: MCLoss() + EILoss(Rotate(n_trans=4)); buffer: MCLoss only"
+      },
+      "ER+EI": {
+        "pass": true,
+        "physics_class_t2": "deepinv.physics.Tomography",
+        "ct_n_angles": 40,
+        "n_angles_40": true,
+        "replay_rebuilds_mri": true,
+        "BufferReplayLoss_nonzero": true,
+        "replay_physics_class": "deepinv.physics.MRI",
+        "n_distinct_ya": 1,
+        "n_eval": 32,
+        "backbone_class": "deepinv.models.UNet",
+        "backbone_ctor_kwargs": {
+          "in_channels": 2,
+          "out_channels": 2,
+          "residual": true,
+          "circular_padding": false,
+          "cat": true,
+          "bias": true,
+          "batch_norm": true,
+          "scales": 3
+        },
+        "backbone_wrapper_class": "deepinv.models.ArtifactRemoval",
+        "arm_loss": "current: MCLoss() + EILoss(Rotate(n_trans=4)); buffer: MCLoss() + EILoss(Rotate(n_trans=4))"
+      }
+    },
+    "2": {
+      "Fine-tune": {
+        "pass": true,
+        "physics_class_t2": "deepinv.physics.Tomography",
+        "ct_n_angles": 40,
+        "n_angles_40": true,
+        "replay_rebuilds_mri": true,
+        "BufferReplayLoss_nonzero": null,
+        "replay_physics_class": null,
+        "n_distinct_ya": 1,
+        "n_eval": 32,
+        "backbone_class": "deepinv.models.UNet",
+        "backbone_ctor_kwargs": {
+          "in_channels": 2,
+          "out_channels": 2,
+          "residual": true,
+          "circular_padding": false,
+          "cat": true,
+          "bias": true,
+          "batch_norm": true,
+          "scales": 3
+        },
+        "backbone_wrapper_class": "deepinv.models.ArtifactRemoval",
+        "arm_loss": "current: MCLoss() + EILoss(Rotate(n_trans=4)); no buffer replay"
+      },
+      "ER+MC": {
+        "pass": true,
+        "physics_class_t2": "deepinv.physics.Tomography",
+        "ct_n_angles": 40,
+        "n_angles_40": true,
+        "replay_rebuilds_mri": true,
+        "BufferReplayLoss_nonzero": true,
+        "replay_physics_class": "deepinv.physics.MRI",
+        "n_distinct_ya": 1,
+        "n_eval": 32,
+        "backbone_class": "deepinv.models.UNet",
+        "backbone_ctor_kwargs": {
+          "in_channels": 2,
+          "out_channels": 2,
+          "residual": true,
+          "circular_padding": false,
+          "cat": true,
+          "bias": true,
+          "batch_norm": true,
+          "scales": 3
+        },
+        "backbone_wrapper_class": "deepinv.models.ArtifactRemoval",
+        "arm_loss": "current: MCLoss() + EILoss(Rotate(n_trans=4)); buffer: MCLoss only"
+      },
+      "ER+EI": {
+        "pass": true,
+        "physics_class_t2": "deepinv.physics.Tomography",
+        "ct_n_angles": 40,
+        "n_angles_40": true,
+        "replay_rebuilds_mri": true,
+        "BufferReplayLoss_nonzero": true,
+        "replay_physics_class": "deepinv.physics.MRI",
+        "n_distinct_ya": 1,
+        "n_eval": 32,
+        "backbone_class": "deepinv.models.UNet",
+        "backbone_ctor_kwargs": {
+          "in_channels": 2,
+          "out_channels": 2,
+          "residual": true,
+          "circular_padding": false,
+          "cat": true,
+          "bias": true,
+          "batch_norm": true,
+          "scales": 3
+        },
+        "backbone_wrapper_class": "deepinv.models.ArtifactRemoval",
+        "arm_loss": "current: MCLoss() + EILoss(Rotate(n_trans=4)); buffer: MCLoss() + EILoss(Rotate(n_trans=4))"
+      }
+    },
+    "3": {
+      "Fine-tune": {
+        "pass": true,
+        "physics_class_t2": "deepinv.physics.Tomography",
+        "ct_n_angles": 40,
+        "n_angles_40": true,
+        "replay_rebuilds_mri": true,
+        "BufferReplayLoss_nonzero": null,
+        "replay_physics_class": null,
+        "n_distinct_ya": 1,
+        "n_eval": 32,
+        "backbone_class": "deepinv.models.UNet",
+        "backbone_ctor_kwargs": {
+          "in_channels": 2,
+          "out_channels": 2,
+          "residual": true,
+          "circular_padding": false,
+          "cat": true,
+          "bias": true,
+          "batch_norm": true,
+          "scales": 3
+        },
+        "backbone_wrapper_class": "deepinv.models.ArtifactRemoval",
+        "arm_loss": "current: MCLoss() + EILoss(Rotate(n_trans=4)); no buffer replay"
+      },
+      "ER+MC": {
+        "pass": true,
+        "physics_class_t2": "deepinv.physics.Tomography",
+        "ct_n_angles": 40,
+        "n_angles_40": true,
+        "replay_rebuilds_mri": true,
+        "BufferReplayLoss_nonzero": true,
+        "replay_physics_class": "deepinv.physics.MRI",
+        "n_distinct_ya": 1,
+        "n_eval": 32,
+        "backbone_class": "deepinv.models.UNet",
+        "backbone_ctor_kwargs": {
+          "in_channels": 2,
+          "out_channels": 2,
+          "residual": true,
+          "circular_padding": false,
+          "cat": true,
+          "bias": true,
+          "batch_norm": true,
+          "scales": 3
+        },
+        "backbone_wrapper_class": "deepinv.models.ArtifactRemoval",
+        "arm_loss": "current: MCLoss() + EILoss(Rotate(n_trans=4)); buffer: MCLoss only"
+      },
+      "ER+EI": {
+        "pass": true,
+        "physics_class_t2": "deepinv.physics.Tomography",
+        "ct_n_angles": 40,
+        "n_angles_40": true,
+        "replay_rebuilds_mri": true,
+        "BufferReplayLoss_nonzero": true,
+        "replay_physics_class": "deepinv.physics.MRI",
+        "n_distinct_ya": 1,
+        "n_eval": 32,
+        "backbone_class": "deepinv.models.UNet",
+        "backbone_ctor_kwargs": {
+          "in_channels": 2,
+          "out_channels": 2,
+          "residual": true,
+          "circular_padding": false,
+          "cat": true,
+          "bias": true,
+          "batch_norm": true,
+          "scales": 3
+        },
+        "backbone_wrapper_class": "deepinv.models.ArtifactRemoval",
+        "arm_loss": "current: MCLoss() + EILoss(Rotate(n_trans=4)); buffer: MCLoss() + EILoss(Rotate(n_trans=4))"
+      }
+    }
+  },
+  "device": "cpu",
+  "elapsed_sec": "6418"
+}

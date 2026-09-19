@@ -1,0 +1,10 @@
+device=cpu
+arm=finetune
+n_train=6
+n_eval=2
+epochs_t1=25
+epochs_t2=200
+tiny=false
+start_utc=2026-09-15T13:51:49Z
+end_utc=2026-09-15T14:01:08Z
+elapsed_sec=559
