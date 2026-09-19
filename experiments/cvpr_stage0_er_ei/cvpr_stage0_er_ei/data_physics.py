@@ -62,23 +62,70 @@ def _corner_crops(x: torch.Tensor, size: int) -> torch.Tensor:
     return torch.cat(crops, dim=0)
 
 
-def _spatial_crops(x: torch.Tensor, size: int) -> torch.Tensor:
-    """3×3 windows of `size` on a larger native slice (still 128 recon).
+def _linspace_origins(span: int, n: int) -> list[int]:
+    if n <= 1:
+        return [0]
+    span = max(int(span), 0)
+    return [int(round(i * span / (n - 1))) for i in range(n)]
 
-    Corner crops yield at most 8 tiles from 2 native 320 slices. Stage-1 N_buf=8
-    plus held-out eval needs 10, so include the center window as well.
+
+def _origin_grid(h: int, w: int, size: int, n_y: int, n_x: int) -> list[tuple[int, int]]:
+    ys = _linspace_origins(h - size, n_y)
+    xs = _linspace_origins(w - size, n_x)
+    return [(int(y), int(x0)) for y in ys for x0 in xs]
+
+
+def _stack_origin_crops(
+    x: torch.Tensor, size: int, origins: list[tuple[int, int]]
+) -> torch.Tensor:
+    crops = [x[:, :, y0 : y0 + size, x0 : x0 + size] for y0, x0 in origins]
+    return torch.cat(crops, dim=0)
+
+
+def _spatial_crops(
+    x: torch.Tensor, size: int, n_total: int | None = None
+) -> torch.Tensor:
+    """Overlapping windows of `size` on a larger native slice (still 128 recon).
+
+    Prefix is the frozen 3×3 grid (up to 18 tiles from 2 native 320 slices) so
+    n_train=8 stays comparable. HARDEN n_eval=32 needs 40 tiles: densify the
+    origin grid after that prefix (never a 320² architecture change).
     """
     _n, _c, h, w = x.shape
     if h == size and w == size:
-        return x
+        return x[:n_total] if n_total is not None else x
     if h < size or w < size:
-        return torch.nn.functional.interpolate(
+        x = torch.nn.functional.interpolate(
             x, size=(size, size), mode="bilinear", align_corners=False
         )
+        return x[:n_total] if n_total is not None else x
     ys = sorted({0, max(0, (h - size) // 2), max(0, h - size)})
     xs = sorted({0, max(0, (w - size) // 2), max(0, w - size)})
-    crops = [x[:, :, y0 : y0 + size, x0 : x0 + size] for y0 in ys for x0 in xs]
-    return torch.cat(crops, dim=0)
+    origins = [(y, x0) for y in ys for x0 in xs]
+    n_native = int(x.shape[0])
+    have = len(origins) * n_native
+    if n_total is not None and have < int(n_total):
+        seen = set(origins)
+        side = 3
+        while have < int(n_total):
+            side += 1
+            if side > 32:
+                raise RuntimeError(
+                    f"cannot densify MRI crops to n_total={n_total} "
+                    f"from {n_native} native {h}×{w} slices"
+                )
+            for origin in _origin_grid(h, w, size, side, side):
+                if origin in seen:
+                    continue
+                seen.add(origin)
+                origins.append(origin)
+                have = len(origins) * n_native
+                if have >= int(n_total):
+                    break
+    stacked = _stack_origin_crops(x, size, origins)
+    if n_total is not None:
+        return stacked[: int(n_total)]
+    return stacked
 
 
 def load_anatomy_slices(
@@ -92,8 +139,8 @@ def load_anatomy_slices(
 
     n_total <= 2: resize both demo slices to img_size (tiny path).
     2 < n_total <= 8: 128×128 corner crops from native 320×320 (up to 8 slices).
-    n_total > 8: 3×3 128 windows (up to 18) so N_buf=8 plus held-out eval fit.
-    Recon stays 128×128. Not a 320² architecture change.
+    n_total > 8: 3×3 128 windows (up to 18), then denser overlapping windows
+    so HARDEN n_train=8 + n_eval=32 (40) fits. Recon stays 128×128.
     """
     anatomy = str(anatomy).lower()
     if anatomy not in ("knee", "brain"):
@@ -122,7 +169,7 @@ def load_anatomy_slices(
         )
         x = _stack_images(dataset)
         if n_total > 8:
-            x = _spatial_crops(x, img_size)[:n_total]
+            x = _spatial_crops(x, img_size, n_total=n_total)
         else:
             x = _corner_crops(x, img_size)[:n_total]
     if x.ndim != 4 or x.shape[1] != 2:
@@ -264,11 +311,40 @@ def load_ct100_tiles(
 
     Source image: `CT100_256x256_0.pt` from deepinv.utils.load_example.
     Physics-tour demo uses 64×64; 256 tiles into 16 non-overlapping 64 crops.
+    HARDEN n_eval=32 needs 40 tiles: keep that 4×4 prefix (n_train=8 unchanged)
+    then densify with overlapping 64 windows.
     """
     x = load_example("CT100_256x256_0.pt")
     if x.ndim == 3:
         x = x.unsqueeze(0)
-    x = _nonoverlap_tiles(x, int(img_size))[: int(n_total)]
+    size = int(img_size)
+    _n, _c, h, w = x.shape
+    origins = [
+        (y0, x0)
+        for y0 in range(0, h - size + 1, size)
+        for x0 in range(0, w - size + 1, size)
+    ]
+    n_native = int(x.shape[0])
+    have = len(origins) * n_native
+    if have < int(n_total):
+        seen = set(origins)
+        side = max(h // size, 1)
+        while have < int(n_total):
+            side += 1
+            if side > 64:
+                raise RuntimeError(
+                    f"cannot densify CT tiles to n_total={n_total} "
+                    f"from {h}×{w} at tile {size}"
+                )
+            for origin in _origin_grid(h, w, size, side, side):
+                if origin in seen:
+                    continue
+                seen.add(origin)
+                origins.append(origin)
+                have = len(origins) * n_native
+                if have >= int(n_total):
+                    break
+    x = _stack_origin_crops(x, size, origins)[: int(n_total)]
     if x.shape[0] < int(n_total):
         raise RuntimeError(
             f"Requested n_total={n_total} CT tiles but only loaded {x.shape[0]}"

@@ -14,4 +14,5 @@ Tiny seed=1 CPU stub (few iters) and demo-scale go/kill grid:
 - `stage1_crossip_grid/` — Stage-1 MoDL matrix: stream E, N_buf∈{1,2,4,8} × seeds {1,2,3}. **Remainder aborted per Guixian** (seed=3 N_buf∈{4,8} not run). See `ABORT.md`. Do not merge with light-UNet.
 - `light_unet_s1_seed1/` — Light backbone direction smoke: `UNet(scales=3)` + `ArtifactRemoval`, stream E, N_buf=1 seed=1, Fine-tune | ER+MC | ER+EI. Not MoDL. Seed=1 cell kept; formal 3-seed readout lives in `light_unet_s1_seeds/`.
 - `light_unet_s1_seeds/` — Light-UNet N_buf=1 seeds {1,2,3}. Same fingerprint as seed1. **Not MoDL.** Formal S1 go/kill at N_buf=1 only (do not expand N_buf). Confirmation line: `CONFIRMATION.md`.
+- `light_unet_neval32_nbuf1/` — HARDEN cut: same light-UNet fingerprint, n_train=8 unchanged, **n_eval=32**. Do not merge with `light_unet_s1_seeds/` (8/2) or MoDL.
 

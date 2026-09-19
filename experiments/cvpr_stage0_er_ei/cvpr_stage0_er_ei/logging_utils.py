@@ -385,3 +385,92 @@ def stage1_go_kill(
             + result["reason"]
         )
     return result
+
+
+def harden_neval_go_kill(
+    rows: Iterable[Mapping[str, Any]],
+    *,
+    required_seeds: Sequence[int] = (1, 2, 3),
+) -> dict[str, Any]:
+    """HARDEN n_eval-only go/kill on T1 Fgt (N_buf=1).
+
+    GO: ≥2/3 seeds with Fgt(ER+EI)<Fgt(ER+MC) AND mean(Fgt_MC−Fgt_EI)>0.
+    Kill: ≥2/3 seeds EI does not win, OR mean Δ≤0.
+    """
+    required_seeds = tuple(int(s) for s in required_seeds)
+    by_seed: dict[int, dict[str, float]] = {}
+    for row in rows:
+        seed = int(row["seed"])
+        by_seed.setdefault(seed, {})[str(row["arm"])] = float(row["Fgt"])
+
+    per_seed: list[dict[str, Any]] = []
+    win_seeds: list[int] = []
+    deltas: list[float] = []
+    for seed in sorted(by_seed):
+        rec = by_seed[seed]
+        ei = rec.get("ER+EI")
+        mc = rec.get("ER+MC")
+        if ei is None or mc is None:
+            continue
+        delta = float(mc) - float(ei)
+        better = float(ei) < float(mc)
+        deltas.append(delta)
+        if better:
+            win_seeds.append(seed)
+        per_seed.append(
+            {
+                "seed": seed,
+                "Fgt_Fine-tune": rec.get("Fine-tune"),
+                "Fgt_ER+MC": mc,
+                "Fgt_ER+EI": ei,
+                "ER+EI_better": better,
+                "delta_MC_minus_EI": delta,
+            }
+        )
+
+    n_win = len(win_seeds)
+    n_have = len(per_seed)
+    mean_delta = (sum(deltas) / len(deltas)) if deltas else None
+    complete = set(by_seed) >= set(required_seeds) and n_have >= len(required_seeds)
+    verdict = "INCONCLUSIVE"
+    reason = "Need seeds {1,2,3} before a HARDEN n_eval go/kill call."
+    if complete and mean_delta is not None:
+        n_lose = n_have - n_win
+        if n_win >= 2 and mean_delta > 0:
+            verdict = "GO"
+            reason = (
+                f"{n_win}/3 seeds have Fgt(ER+EI)<Fgt(ER+MC) and "
+                f"mean(Fgt_MC−Fgt_EI)={mean_delta:.3f}>0 (seeds {win_seeds})."
+            )
+        else:
+            verdict = "KILL"
+            why = []
+            if n_lose >= 2:
+                why.append(f"{n_lose}/3 seeds EI does not win")
+            if mean_delta <= 0:
+                why.append(f"mean(Fgt_MC−Fgt_EI)={mean_delta:.3f}≤0")
+            if not why:
+                why.append(
+                    f"only {n_win}/3 seeds EI-better (need ≥2/3) "
+                    f"or mean Δ not >0"
+                )
+            reason = "HARDEN bar failed: " + "; ".join(why) + "."
+    return {
+        "verdict": verdict,
+        "reason": reason,
+        "rule": (
+            "GO: ≥2/3 seeds with Fgt(ER+EI)<Fgt(ER+MC) AND mean(Fgt_MC−Fgt_EI)>0. "
+            "Kill: ≥2/3 seeds EI does not win, OR mean Δ≤0."
+        ),
+        "per_seed": per_seed,
+        "win_seeds": win_seeds,
+        "n_win_seeds": n_win,
+        "mean_delta_MC_minus_EI": mean_delta,
+        "seeds_observed": sorted(by_seed),
+        "grid_complete": complete,
+        "n_train": 8,
+        "n_eval": 32,
+        "N_buf": 1,
+        "primary": "Fgt on T1 MRI test (after_T1.PSNR_T1 - after_T2.PSNR_T1)",
+        "do_not_merge_with": "recorded_smoke/light_unet_s1_seeds/ (n_eval=2)",
+    }
