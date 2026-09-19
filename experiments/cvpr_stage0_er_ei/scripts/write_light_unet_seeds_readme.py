@@ -159,6 +159,9 @@ def main(argv: list[str]) -> int:
         "**Not MoDL.** Separate from `recorded_smoke/stage1_crossip_grid/`. "
         "N_buf=1 only — **do not expand the N_buf grid**.",
         "",
+        "Code Reviewer formal GO is conditional on the confirmation line in "
+        "[`CONFIRMATION.md`](CONFIRMATION.md).",
+        "",
         "## Backbone fingerprint",
         "",
         f"- class: `{backbone.get('class', 'deepinv.models.UNet')}`",

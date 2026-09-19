@@ -2,6 +2,8 @@
 
 Stream E three-arm cells on **`deepinv.models.UNet(in_channels=2, out_channels=2, scales=3)`** wrapped by `ArtifactRemoval(mode=adjoint)`. **Not MoDL.** Separate from `recorded_smoke/stage1_crossip_grid/`. N_buf=1 only — **do not expand the N_buf grid**.
 
+Code Reviewer formal GO is conditional on the confirmation line in [`CONFIRMATION.md`](CONFIRMATION.md).
+
 ## Backbone fingerprint
 
 - class: `deepinv.models.UNet`
